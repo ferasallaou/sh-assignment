@@ -14,12 +14,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run format:check && npm run typecheck",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "mcp": "tsx scripts/mcp.ts"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@nestjs/common": "^11.2.8",
     "@nestjs/core": "^11.2.8",
     "csv-parse": "^7.0.3",
