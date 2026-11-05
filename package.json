@@ -27,7 +27,8 @@
     "web": "npm run dev -w frontend",
     "api": "npm run api -w backend --",
     "dev": "concurrently -n hr,mcp,api,web -c yellow,blue,magenta,green \"npm run hr-api\" \"npm run mcp\" \"npm run api\" \"npm run web\"",
-    "hr-api": "npm run hr-api -w backend --"
+    "hr-api": "npm run hr-api -w backend --",
+    "start": "npm run db:up && npm run db:migrate && npm run sync && concurrently -n hr,mcp,api,web -c yellow,blue,magenta,green \"npm run hr-api\" \"npm run mcp\" \"npm run api\" \"npm run dev -w frontend -- --open\""
   },
   "engines": {
     "node": ">=20"
