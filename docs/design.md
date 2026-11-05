@@ -177,49 +177,7 @@ The common mistake is to treat everything as documents for vector search. "What 
 
 ### 4.2 The model: records, chunks, entities, links
 
-```mermaid
-erDiagram
-  RECORD ||--o{ CHUNK : "split into"
-  RECORD ||--o{ LINK : "has"
-  ENTITY ||--o{ LINK : "has"
-  ENTITY ||--o{ ENTITY_ALIAS : "known as"
-  RECORD {
-    bigint id
-    text source "salesforce, jira, ..."
-    text external_id "ID inside the source"
-    text title
-    text content
-    jsonb fields "typed fields per data contract"
-    text_array allowed_groups "NULL = unknown = denied"
-    text sensitivity "internal, confidential, restricted"
-    text region "eu, na"
-    text content_hash "text changed: re-chunk, re-embed"
-    text record_hash "anything changed"
-    timestamptz source_updated_at
-    timestamptz synced_at
-  }
-  CHUNK {
-    bigint id
-    bigint record_id
-    text content
-    tsvector tsv "keyword index"
-    vector embedding "meaning index"
-    text embedding_model "vectors only compared within one model"
-  }
-  ENTITY {
-    bigint id
-    text type "feature, customer, team, product, person"
-    text key "stable ID, e.g. dark-mode"
-    text name
-  }
-  LINK {
-    bigint record_id
-    bigint entity_id
-    text relation "requests, implements, describes, owns"
-    text matched_by "id, alias, suggested, reviewed"
-    real confidence
-  }
-```
+![Data model: a record is split into chunks and linked to shared entities; permissions live only on the record](images/data-model.svg)
 
 Design choices and reasons:
 
@@ -328,31 +286,7 @@ Employees use one company chat (web, Slack). A **router** sends each question to
 | **Embedding model change** | Chunks from another model are re-embedded in the background; search compares only same-model vectors | Hours, no downtime |
 | **Schema change in a source** | Contract validation fails → quarantine → alert the owner | Until the owner fixes the contract |
 
-```mermaid
-sequenceDiagram
-  participant S as Source (e.g. Jira)
-  participant C as Connector
-  participant Q as Change queue
-  participant W as Worker
-  participant K as Knowledge store
-  participant R as Nightly reconciliation
-
-  S->>C: webhook "ENG-42 changed"
-  C->>S: fetch current ENG-42 (text + permissions)
-  C->>Q: upsert event (ordered per record)
-  Q->>W: deliver
-  W->>K: compare fingerprints
-  alt only permissions changed
-    W->>K: update record + links (one transaction)
-  else text changed
-    W->>K: update record, replace chunks, rebuild links (one transaction)
-    W->>K: embed new chunks (separate step)
-  end
-  Note over S,C: A deletion with no webhook...
-  R->>S: list all IDs + fingerprints
-  R->>K: compare with stored IDs
-  R->>K: delete records missing from the source
-```
+![Update flow: a change is fetched, queued and saved in one transaction; a nightly check removes records deleted at the source](images/update-flow.svg)
 
 ### 6.2 Correctness rules
 
