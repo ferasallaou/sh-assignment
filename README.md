@@ -191,9 +191,9 @@ Needs `OPENROUTER_API_KEY` in `backend/.env`. One command starts the pretend HR 
 npm run dev
 ```
 
-Then open http://localhost:5173. Pick who you are (one of the four demo users below, or **Compare all** to run the same question as each of them side by side) and ask. The router's choice of agent appears first, then each tool call as it happens with the record IDs it returned (coloured by source), then the answer with its cited sources.
+Then open http://localhost:5173. Pick who you are in **Signed in as** (the ⓘ next to it explains that it stands in for the company login), or **Everyone (compare)** to ask as every demo user side by side. Type a question, or click a starter such as _"Should we build…"_ to fill the box and finish it yourself; Enter asks. While the assistant works you see the router's choice and each lookup live, with the record IDs it got back (coloured by source). Once the answer is in, the lookups fold into one line (for example "1 lookup · 1 refused") that you can open again.
 
-![The web page comparing Paula and Sam](docs/images/web-page.jpg)
+![The page while the roadmap assistant looks things up](docs/images/web-page.jpg)
 
 How it works: the page calls a small web API (`backend/src/api/`, port `API_PORT`, default 3200), which routes the question, runs the chosen agent with the same loop as the CLI, and streams each step to the browser with server-sent events. The agent still reaches the knowledge base only through the MCP service, with the chosen user's token, so the page gets exactly the same permission checks. Choosing the user on the page is a demo shortcut; in production it comes from the company login. The page never receives user tokens or agent keys. If the browser leaves mid-answer, the agent stops at its next step.
 
@@ -223,8 +223,6 @@ To run the parts on their own: `npm run hr-api`, `npm run mcp`, `npm run api` an
   - _"Should we prioritize dark mode next?"_ goes to the roadmap agent instead.
 
 ![Eli asks for Paula's salary and the MCP service refuses](docs/images/salary-refused.jpg)
-
-![The router sends the vacation question to the HR agent for each user](docs/images/router-hr.jpg)
 
 From the CLI (skips the router): `AGENT_KEY=dev-agent-hr npm run agent -- --user sam "How many vacation days do I have left?"`
 
