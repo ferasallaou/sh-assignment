@@ -5,7 +5,7 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 ## Scope right now
 
 - **Roadmap agent only.** It answers questions like "Should we prioritize dark mode next?" using mocked Sales, Engineering and Product data.
-- **Not now:** HR agent, router, UI, live lookups, real integrations, real login.
+- **Not now:** HR agent, router, live lookups, real integrations, real login. A small web page is optional step 11 (added 2026-11-05).
 - **HR agent comes later, if time allows.** It would add an HR connector, an agent key and scope in `policies.yaml`, and its own instructions and tool list. An optional live tool, `get_leave_balance`, would ask a pretend HR system as the user. Sync, the database, the permission checks and the MCP service stay unchanged.
 
 ## Confirmed stack
@@ -48,6 +48,7 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 8. **Roadmap agent CLI:** our own tool loop with step and call limits, answers with source references.
 9. **Proof:** a small evaluation set, one demo script covering all 6 required scenarios (including a prompt that tries to bypass access), the README, and `docs/ai-sdlc.md`, updated as we go.
 10. **Design document:** written after the demo works, covering every section the PDF asks for.
+11. **Optional, if time allows (added 2026-11-05):** a small web page where you pick a user and ask a question, and the agent's steps (tool calls, results, then the answer) stream in live over SSE (server-sent events). It reuses the step 8 agent loop; the CLI stays the main demo. Plain and functional, not polished.
 
 ## Rules while building
 

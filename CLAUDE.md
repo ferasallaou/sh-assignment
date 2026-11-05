@@ -103,7 +103,7 @@ PostgreSQL + pgvector replaced the earlier SQLite assumption at the user's reque
 - Real Salesforce, Jira, Notion, or HR integrations
 - Real SSO or OAuth
 - Kafka, distributed workers, and multi-region infrastructure
-- Polished UI
+- Polished UI (a small, plain web page that streams the agent's steps over SSE is allowed as optional step 11, after the core proof)
 - Multi-agent router
 - LLM-based entity matching
 
