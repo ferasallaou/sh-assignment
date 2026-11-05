@@ -20,7 +20,7 @@ export interface OpenRouterChatOptions {
 }
 
 /**
- * Chat through OpenRouter, using LangChain only as the adapter (CLAUDE.md rule).
+ * Chat through OpenRouter, using LangChain only as the adapter (AGENTS.md rule).
  * LangChain handles the wire format and tool binding; the agent loop stays our own code.
  * OpenRouter speaks the OpenAI API, so LangChain's OpenAI client is pointed at it.
  */

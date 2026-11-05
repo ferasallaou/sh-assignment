@@ -16,7 +16,7 @@ export const DEFAULT_LIMITS: AgentLimits = { maxSteps: 6, maxToolCalls: 10 };
 const CITATION = /\[([A-Z]+-\d+)\]/g;
 
 /**
- * Our own small agent loop (no LangChain agents, per CLAUDE.md):
+ * Our own small agent loop (no LangChain agents, per AGENTS.md):
  *   ask the model → run the tools it asks for through the MCP service → repeat → answer.
  * Limits on steps and tool calls stop runaway loops; on a limit the model must answer
  * with what it has. Citations in the answer are checked against what the tools returned.
