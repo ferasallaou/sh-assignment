@@ -34,7 +34,7 @@ Saved on 2026-11-04. **This file wins over `PLAN.md` where they disagree.** `PLA
 - **OpenRouter** for chat and embeddings (the user has a key).
 - **LangChain** is used only as the model adapter, behind `LlmProvider` and `EmbeddingProvider`. The model picks tools through LangChain tool binding, but the **agent loop is our own code**, and every tool call goes through the MCP service.
 - **MCP over HTTP**. Mock agent and user keys go in each request, and the service resolves identity.
-- **Demo scope:** the roadmap agent CLI only. No router. A small web page that streams the agent's steps over SSE was added on 2026-11-05 as **optional step 11**, only after the core proof (steps 7–9) is done, so the time budget goes to the knowledge layer first. The HR agent and its live `get_leave_balance` tool come later, if time allows.
+- **Demo scope:** the roadmap agent CLI only. No router at first. A small web page that streams the agent's steps over SSE was added on 2026-11-05 as **step 11**, after the core proof (steps 7–9). The router and the HR agent with its live `get_leave_balance` tool were added after that (step 12, below).
 
 ## The user's design outline (latest version, pasted 2026-11-04)
 
@@ -74,3 +74,16 @@ Diagram: company-wide UI → router → agents (HR, roadmap, future) → MCP ser
 ## Code conventions (2026-11-05)
 
 - Shared types live in `src/types/` (types only, enforced by ESLint). A Nest CLI library was rejected for now because it needs the monorepo layout; the design document should mention it as the next step once production runs several programs (API and sync worker) from one codebase.
+
+## Router and HR agent (decided 2026-11-05, step 12)
+
+Why: the PoC showed copied knowledge only. This shows the other two ideas from the design: very personal data is fetched live at the source as the user (decision 2), and a router picks the agent so there is no picker (decision 7).
+
+- **HR policies are synced like the others:** a fourth source, Markdown files in `backend/data/sources/hr/`, through the same connector interface. The leave policy (HR-1) is shared with the product, sales and engineering groups. Salary bands (HR-2) are HR-only, and no demo user is in HR.
+- **Leave balances are never copied.** A new MCP tool, `get_leave_balance`, takes **no input**: the MCP service looks up the verified caller's own balance, so nobody can ask for someone else's, whatever the prompt says. A small `HrSystem` interface stands in for the HR system's API. The mock reads `backend/data/live/hr-system.json` on every call (with a short delay, like a network call), so an edit shows up on the next question with no sync. The result says where it came from and when it was fetched. The audit log records the call, but not the balance. In production this would call the HR system with the user's own token (token exchange), as the design describes.
+- **One agent loop, different instructions.** The roadmap agent's loop is reused; each agent gets its own instructions. The HR agent's scope is the `hr` source and the tools `search_knowledge` and `get_leave_balance`. The roadmap agent's scope doesn't include `hr` or the live tool, so it can't reach HR data even if it is asked to.
+- **The router is one model call with a checked answer.** It sees the question and the agents this user may use, and replies with an agent ID and a short reason as JSON, checked with Zod. Anything else (bad JSON, an agent not offered) counts as "no agent". Which agents a user may use is a new `offered_to_groups` field per agent in `policies.yaml`; an agent without it (the product FAQ agent) is never offered. Nina, with no groups, gets no agent and a polite message.
+- **The router is not a lock.** It has no key and no data access. The chosen agent still calls the MCP service with its own key and the user's token, so a wrong route, or a question trying to trick the router, can't reveal anything that agent and user may not see. Its risk is a poor answer, not a leak (listed under main risks).
+- **The page drops the agent picker** and shows which agent was chosen and why. The web API keeps an optional `agent` setting for tests and for comparing agents on purpose; the MCP service checks access the same way either way.
+- **Left out:** sending one question to several agents, follow-up questions, and the router learning from mistakes.
+

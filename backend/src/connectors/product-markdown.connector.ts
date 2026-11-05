@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { z } from 'zod';
-import type { ChangeBatch, SourceConnector, SourceRecord } from '../types';
+import type { ChangeBatch, SourceConnector, SourceName, SourceRecord } from '../types';
 import { normalizeGroups, parseError, snapshotBatch } from './source-connector';
 
 const DEFAULT_DIR = join(__dirname, '..', '..', 'data', 'sources', 'product');
@@ -19,12 +19,17 @@ const frontMatterSchema = z.object({
   updated_at: z.iso.datetime(),
 });
 
-/** Reads Product documents: one Markdown file per document, with YAML front matter. */
-export class ProductMarkdownConnector implements SourceConnector {
-  readonly sourceName = 'product' as const;
+/**
+ * Reads a folder of documents: one Markdown file per document, with YAML front matter.
+ * Used by Product (below) and HR (hr-markdown.connector.ts), which keep documents the same way.
+ */
+export class MarkdownDocsConnector implements SourceConnector {
   readonly linkRelation = 'describes';
 
-  constructor(private readonly dir: string = DEFAULT_DIR) {}
+  constructor(
+    readonly sourceName: SourceName,
+    private readonly dir: string,
+  ) {}
 
   async fetchChanges(): Promise<ChangeBatch> {
     const files = readdirSync(this.dir)
@@ -55,5 +60,12 @@ export class ProductMarkdownConnector implements SourceConnector {
       explicitFeatureKeys: meta.feature ? [meta.feature] : [],
       updatedAt: meta.updated_at,
     };
+  }
+}
+
+/** Product documents (briefs, roadmap drafts, feedback digests). */
+export class ProductMarkdownConnector extends MarkdownDocsConnector {
+  constructor(dir: string = DEFAULT_DIR) {
+    super('product', dir);
   }
 }

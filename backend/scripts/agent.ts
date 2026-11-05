@@ -1,13 +1,15 @@
 /**
- * Asks the roadmap agent a question on behalf of a user.
+ * Asks an agent (the roadmap agent by default) a question on behalf of a user.
  *
  * Usage: npm run agent -- --user paula "Should we prioritize dark mode next?"
  * Needs the MCP service running (npm run mcp) and OPENROUTER_API_KEY in .env.
  *
  * --user looks up the user's token in data/policies.yaml (a demo shortcut: in production the
  * token would come from the user's login). --token passes a token directly.
+ * AGENT_KEY picks the agent, e.g. AGENT_KEY=dev-agent-hr for the HR agent. The CLI skips the router.
  */
-import { RoadmapAgent } from '../src/agent/roadmap-agent';
+import { AgentLoop } from '../src/agent/agent-loop';
+import { instructionsFor } from '../src/agent/instructions';
 import { McpToolClient } from '../src/agent/mcp-tool-client';
 import { loadConfig } from '../src/config';
 import { loadPolicyConfig } from '../src/policy/policy-config';
@@ -68,7 +70,8 @@ async function main(): Promise<void> {
   console.log(`Asking as ${user?.name ?? 'token user'} via ${config.AGENT_KEY} (${llm.name})\n`);
 
   try {
-    const run = await new RoadmapAgent(llm, tools, undefined, printEvent).ask(args.question);
+    const agentId = policies.agents.find((a) => a.api_key === config.AGENT_KEY)?.id ?? 'roadmap-agent';
+    const run = await new AgentLoop(llm, tools, undefined, printEvent, instructionsFor(agentId)).ask(args.question);
     console.log(`\n${run.answer}\n`);
     console.log('Sources:');
     for (const c of run.citations)

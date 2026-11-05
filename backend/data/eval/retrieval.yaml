@@ -77,3 +77,24 @@ cases:
     query: dark mode demand from customers
     expect: [PRD-7]
     forbid: [S-101, S-102, S-103, ENG-42, ENG-43]
+
+  # HR (step 12): the leave policy is shared with staff; salary bands are HR-only;
+  # and the roadmap agent can't reach HR documents at all.
+  - id: hr-leave-policy
+    agent: hr-agent
+    user: sam
+    query: Can I carry unused vacation days over to next year?
+    expect: [HR-1]
+    forbid: [HR-2]
+
+  - id: hr-salary-hidden
+    agent: hr-agent
+    user: eli
+    query: What are the salary bands for 2027?
+    forbid: [HR-2]
+
+  - id: roadmap-agent-no-hr
+    agent: roadmap-agent
+    user: paula
+    query: annual leave policy vacation days
+    forbid: [HR-1, HR-2]

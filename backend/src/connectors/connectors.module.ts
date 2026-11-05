@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EngineeringJsonConnector } from './engineering-json.connector';
+import { HrMarkdownConnector } from './hr-markdown.connector';
 import { ProductMarkdownConnector } from './product-markdown.connector';
 import { SalesCsvConnector } from './sales-csv.connector';
 import type { SourceConnector } from '../types';
@@ -20,6 +21,7 @@ export const SOURCE_CONNECTORS = Symbol('SOURCE_CONNECTORS');
         new SalesCsvConnector(),
         new EngineeringJsonConnector(),
         new ProductMarkdownConnector(),
+        new HrMarkdownConnector(),
       ],
     },
   ],

@@ -4,7 +4,6 @@ import { applyEvent, initialRunState, type RunState } from './run-state';
 
 export interface AskParams {
   user: string;
-  agent: string;
   question: string;
   /** Changes on every "Ask", so asking the same question again starts a new run. */
   runId: number;
@@ -18,19 +17,20 @@ export function useAgentRun(params: AskParams): RunState {
   const [state, setState] = useState<RunState>(initialRunState);
 
   useEffect(() => {
-    const query = new URLSearchParams({ user: params.user, agent: params.agent, q: params.question });
+    // No agent: the router on the server picks one.
+    const query = new URLSearchParams({ user: params.user, q: params.question });
     const source = new EventSource(`/api/ask?${query}`);
     let finished = false;
 
     const onEvent = (message: MessageEvent<string>) => {
       const event = JSON.parse(message.data) as AskStreamEvent;
-      if (event.type !== 'step') {
+      if (event.type === 'done' || event.type === 'error') {
         finished = true;
         source.close(); // otherwise the browser reconnects and asks again
       }
       setState((current) => applyEvent(current, event));
     };
-    for (const name of ['step', 'done', 'error']) source.addEventListener(name, onEvent as EventListener);
+    for (const name of ['routed', 'step', 'done', 'error']) source.addEventListener(name, onEvent as EventListener);
     source.onerror = () => {
       if (finished) return;
       source.close();

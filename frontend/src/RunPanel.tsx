@@ -17,6 +17,20 @@ export function RunPanel({ params, user }: { params: AskParams; user?: DemoUser 
         </span>
       </header>
 
+      {state.route ? (
+        <p className="route">
+          {state.route.agentId ? (
+            <>
+              Router chose <strong>{state.route.agentId}</strong>: {state.route.reason}
+            </>
+          ) : (
+            <>No assistant picked.</>
+          )}
+        </p>
+      ) : (
+        state.status === 'running' && <p className="route quiet">Choosing an assistant…</p>
+      )}
+
       <ol className="steps">
         {state.steps.map((step, index) => (
           <li key={index} className="step">
@@ -36,7 +50,7 @@ export function RunPanel({ params, user }: { params: AskParams; user?: DemoUser 
             </div>
           </li>
         ))}
-        {state.status === 'running' && state.steps.every((s) => s.result) && (
+        {state.status === 'running' && state.route && state.steps.every((s) => s.result) && (
           <li className="step step-thinking">
             <span className="pulse" aria-hidden /> thinking…
           </li>

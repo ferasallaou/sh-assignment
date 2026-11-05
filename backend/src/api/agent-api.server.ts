@@ -1,18 +1,20 @@
 import { createServer, IncomingMessage, Server as HttpServer, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { McpToolClient } from '../agent/mcp-tool-client';
-import { RoadmapAgent } from '../agent/roadmap-agent';
-import type { AgentEvent, AskStreamEvent, DemoAgent, DemoUser, LlmProvider, PolicyConfig } from '../types';
+import { AgentLoop } from '../agent/agent-loop';
+import { instructionsFor } from '../agent/instructions';
+import { AgentRouter } from '../agent/router';
+import type { AgentEvent, AgentPolicy, AskStreamEvent, DemoAgent, DemoUser, LlmProvider, PolicyConfig } from '../types';
 
 const MAX_QUESTION_LENGTH = 500;
 
 /**
- * A small HTTP API for the web page. It runs the roadmap agent on the server and streams
- * each step to the browser with server-sent events (SSE).
+ * A small HTTP API for the web page. It picks an agent with the router (unless one is named),
+ * runs it on the server and streams each step to the browser with server-sent events (SSE).
  *
  *   GET /api/users    users the demo page can act as (no tokens)
  *   GET /api/agents   agents the demo page can ask through (no keys)
- *   GET /api/ask?user=paula&agent=roadmap-agent&q=...   SSE stream of AskStreamEvent
+ *   GET /api/ask?user=paula&q=...   SSE stream of AskStreamEvent (add &agent=<id> to skip the router)
  *
  * The agent here is a normal MCP client, exactly like the CLI: it connects to the MCP
  * service with the agent's key and the user's token, so the same permission checks apply.
@@ -22,12 +24,15 @@ const MAX_QUESTION_LENGTH = 500;
  */
 export class AgentApiServer {
   private httpServer?: HttpServer;
+  private readonly router: AgentRouter;
 
   constructor(
     private readonly policies: PolicyConfig,
     private readonly llm: LlmProvider,
     private readonly mcpUrl: string,
-  ) {}
+  ) {
+    this.router = new AgentRouter(llm, policies);
+  }
 
   async listen(port: number, host = '127.0.0.1'): Promise<string> {
     this.httpServer = createServer((req, res) => {
@@ -70,9 +75,10 @@ export class AgentApiServer {
 
   private async ask(url: URL, res: ServerResponse): Promise<void> {
     const user = this.policies.users.find((u) => u.id === url.searchParams.get('user'));
-    const agent = this.policies.agents.find((a) => a.id === (url.searchParams.get('agent') ?? 'roadmap-agent'));
+    const agentId = url.searchParams.get('agent');
+    const named = agentId ? this.policies.agents.find((a) => a.id === agentId) : undefined;
     const question = (url.searchParams.get('q') ?? '').trim();
-    if (!user || !agent) return sendJson(res, 400, { error: 'unknown user or agent' });
+    if (!user || (agentId && !named)) return sendJson(res, 400, { error: 'unknown user or agent' });
     if (!question || question.length > MAX_QUESTION_LENGTH) {
       return sendJson(res, 400, { error: `question must be 1-${MAX_QUESTION_LENGTH} characters` });
     }
@@ -96,8 +102,25 @@ export class AgentApiServer {
 
     let tools: McpToolClient | undefined;
     try {
+      let agent: AgentPolicy | undefined = named;
+      if (!agent) {
+        const decision = await this.router.route(user, question);
+        send({ type: 'routed', ...decision });
+        agent = this.policies.agents.find((a) => a.id === decision.agentId);
+        if (!agent) {
+          // Nothing to run: answer with the router's reason.
+          const run = {
+            answer: decision.reason,
+            citations: [],
+            unverifiedCitations: [],
+            toolCalls: 0,
+            stoppedByLimit: false,
+          };
+          return send({ type: 'done', run });
+        }
+      }
       tools = await McpToolClient.connect(this.mcpUrl, agent.api_key, user.token);
-      const run = await new RoadmapAgent(this.llm, tools, undefined, onStep).ask(question);
+      const run = await new AgentLoop(this.llm, tools, undefined, onStep, instructionsFor(agent.id)).ask(question);
       send({ type: 'done', run });
     } catch (error) {
       if (error instanceof ClientLeftError) return;

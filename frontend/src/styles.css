@@ -12,6 +12,10 @@
   --engineering-bg: #e0f3f1;
   --product: #7c3aed;
   --product-bg: #efe7fd;
+  --hr: #be185d;
+  --hr-bg: #fce7f1;
+  --live: #1d4ed8;
+  --live-bg: #e3ecfd;
   --warn: #92400e;
   --warn-bg: #fef3c7;
   --error: #b91c1c;
@@ -37,6 +41,10 @@
     --engineering-bg: #15322f;
     --product: #c4a5ff;
     --product-bg: #2c2240;
+    --hr: #f9a8d4;
+    --hr-bg: #3d1a2c;
+    --live: #93b4ff;
+    --live-bg: #18264a;
     --warn: #f5d27a;
     --warn-bg: #3a3014;
     --error: #ff9b9b;
@@ -445,4 +453,20 @@ textarea {
   .segmented button {
     flex: 1;
   }
+}
+
+.chip-hr {
+  color: var(--hr);
+  background: var(--hr-bg);
+}
+
+.chip-live {
+  color: var(--live);
+  background: var(--live-bg);
+  outline: 1px solid var(--live);
+}
+
+.route {
+  margin: 0 0 12px;
+  font-size: 14px;
 }

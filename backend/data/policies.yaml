@@ -15,6 +15,8 @@ agents:
     api_key: dev-agent-roadmap
     allowed_sources: [sales, engineering, product]
     allowed_tools: [search_knowledge, get_feature_context]
+    # The router may send users in these groups to this agent.
+    offered_to_groups: [product, sales, engineering]
 
   # A second, narrower agent, used to test that tool visibility and source scope
   # depend on the calling agent, not only on the user.
@@ -23,6 +25,16 @@ agents:
     api_key: dev-agent-product-faq
     allowed_sources: [product]
     allowed_tools: [search_knowledge]
+    # No offered_to_groups: the router never picks it (used to test agent scope).
+
+  # Answers HR questions. Its scope is HR documents only, plus the live leave lookup,
+  # which only ever returns the signed-in user's own balance.
+  - id: hr-agent
+    description: Answers questions about HR policies and your own leave, such as how many vacation days you have left.
+    api_key: dev-agent-hr
+    allowed_sources: [hr]
+    allowed_tools: [search_knowledge, get_leave_balance]
+    offered_to_groups: [product, sales, engineering]
 
 users:
   - id: paula
