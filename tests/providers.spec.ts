@@ -5,7 +5,7 @@
  */
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import { loadConfig } from '../src/config';
-import type { ToolSpec } from '../src/providers/llm-provider';
+import type { ToolSpec } from '../src/types';
 import {
   fromLangChainReply,
   OpenRouterChatProvider,

@@ -70,3 +70,7 @@ Diagram: company-wide UI → router → agents (HR, roadmap, future) → MCP ser
 
 - Plain words and short replies.
 - Shape the big picture together before building. Don't rush to tool names, and don't swing the other way into asking about trivia or reading the brief too literally. Make sensible calls, state them, and move on.
+
+## Code conventions (2026-11-05)
+
+- Shared types live in `src/types/` (types only, enforced by ESLint). A Nest CLI library was rejected for now because it needs the monorepo layout; the design document should mention it as the next step once production runs several programs (API and sync worker) from one codebase.

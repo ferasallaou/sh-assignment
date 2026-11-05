@@ -1,5 +1,4 @@
-import type { VerifiedCaller } from './caller';
-import type { PolicyConfig, ToolName } from './policy-config';
+import type { PolicyConfig, ToolName, VerifiedCaller } from '../types';
 
 /**
  * Turns the keys on a request into a verified caller, or null if either key is unknown.

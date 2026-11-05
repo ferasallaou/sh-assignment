@@ -2,14 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { z } from 'zod';
-import {
-  ChangeBatch,
-  SourceConnector,
-  SourceRecord,
-  normalizeGroups,
-  parseError,
-  snapshotBatch,
-} from './source-connector';
+import type { ChangeBatch, SourceConnector, SourceRecord } from '../types';
+import { normalizeGroups, parseError, snapshotBatch } from './source-connector';
 
 const DEFAULT_FILE = join(__dirname, '..', '..', 'data', 'sources', 'sales', 'feature_requests.csv');
 

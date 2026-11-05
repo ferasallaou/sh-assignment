@@ -2,7 +2,7 @@
 import { splitIntoChunks } from '../src/sync/chunker';
 import { linkRecordToFeatures } from '../src/sync/entity-linker';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
-import type { SourceRecord } from '../src/connectors/source-connector';
+import type { SourceRecord } from '../src/types';
 
 const catalog = loadFeatureCatalog();
 

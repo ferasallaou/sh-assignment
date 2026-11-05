@@ -2,34 +2,12 @@ import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
 import { SOURCE_CONNECTORS } from '../connectors/connectors.module';
-import type { SourceConnector, SourceRecord } from '../connectors/source-connector';
 import { DB_POOL } from '../database/database.module';
 import { FEATURE_CATALOG } from '../knowledge/knowledge.module';
-import type { Feature } from '../knowledge/feature-catalog';
-import { EMBEDDING_PROVIDER, EmbeddingProvider, toPgVector } from '../providers/embedding-provider';
+import { EMBEDDING_PROVIDER, toPgVector } from '../providers/embedding-provider';
+import type { EmbeddingProvider, Feature, SourceConnector, SourceRecord, SourceSyncReport, SyncReport } from '../types';
 import { splitIntoChunks } from './chunker';
 import { linkRecordToFeatures } from './entity-linker';
-
-export interface SourceSyncReport {
-  source: string;
-  status: 'synced' | 'unchanged' | 'failed';
-  added: number;
-  updated: number;
-  /** Only permissions, metadata or links changed: no re-chunking or re-embedding needed. */
-  updatedWithoutRechunk: number;
-  unchanged: number;
-  deleted: number;
-  warnings: string[];
-  error?: string;
-}
-
-export interface SyncReport {
-  sources: SourceSyncReport[];
-  chunksEmbedded: number;
-  /** Chunks still without embeddings (no provider configured, or the provider failed). */
-  chunksWaitingForEmbedding: number;
-  embeddingError?: string;
-}
 
 const EMBED_BATCH_SIZE = 64;
 /** A chunk needs (re-)embedding if it has no vector, or one made by another model. $1 = current model name. */
