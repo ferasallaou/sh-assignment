@@ -260,7 +260,8 @@ The retrieval set also runs in CI (keyword mode) as part of `npm test`.
 The database must be running (`npm run db:up`).
 
 ```bash
-npm test             # all tests, against the separate knowledge_test database
+npm test             # all tests: backend (against the separate knowledge_test database), then the page
+npm run test:web     # page tests only (no database needed)
 npm run check        # lint, formatting and type checks
 npm run format       # fix formatting
 ```

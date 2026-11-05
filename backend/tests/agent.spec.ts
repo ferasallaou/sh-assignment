@@ -11,6 +11,7 @@ import { ProductMarkdownConnector } from '../src/connectors/product-markdown.con
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
 import { KnowledgeSearchService } from '../src/knowledge/knowledge-search.service';
+import { hrNotConnected } from '../src/hr/hr-not-connected';
 import { AuditService } from '../src/mcp/audit.service';
 import { McpService } from '../src/mcp/mcp.service';
 import { loadPolicyConfig } from '../src/policy/policy-config';
@@ -67,7 +68,13 @@ beforeAll(async () => {
     catalog,
     null,
   ).syncAll();
-  service = new McpService(loadPolicyConfig(), catalog, new KnowledgeSearchService(pool, null), new AuditService(pool));
+  service = new McpService(
+    loadPolicyConfig(),
+    catalog,
+    new KnowledgeSearchService(pool, null),
+    new AuditService(pool),
+    hrNotConnected,
+  );
   url = await service.listen(0);
 });
 

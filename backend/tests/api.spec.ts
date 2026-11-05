@@ -172,6 +172,29 @@ describe('streaming a question', () => {
     }
   });
 
+  it('sends a general error to the browser, not the raw error text', async () => {
+    const brokenModel: LlmProvider = {
+      name: 'broken',
+      generate: async () => {
+        throw new Error('provider said: invalid key sk-or-secret at db host 10.0.0.5');
+      },
+    };
+    const broken = new AgentApiServer(policies, brokenModel, mcpUrl);
+    const brokenUrl = await broken.listen(0);
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const text = await (await fetch(`${brokenUrl}/api/ask?user=paula&agent=roadmap-agent&q=hi`)).text();
+      expect(text).toMatch(/^event: error\n/);
+      expect(text).toContain('Something went wrong. Please try again.');
+      expect(text).not.toMatch(/sk-or-secret|10\.0\.0\.5/);
+      // The full error is still kept in the server log for whoever runs it.
+      expect(logged.mock.calls.flat().join(' ')).toContain('sk-or-secret');
+    } finally {
+      logged.mockRestore();
+      await broken.close();
+    }
+  });
+
   it('stops the agent soon after the browser disconnects, so no model calls are wasted', async () => {
     let calls = 0;
     const slowModel: LlmProvider = {

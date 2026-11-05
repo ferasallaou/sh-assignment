@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, Server as HttpServer, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 // The low-level MCP server is used on purpose: we need to list a different set of tools per
 // caller and to audit calls to tools the caller wasn't given. The high-level McpServer
 // rejects unknown tools before our code runs, so those attempts would go unrecorded.
@@ -13,9 +13,7 @@ import { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
 import { canUseTool, resolveCaller } from '../policy/identity';
 import { POLICY_CONFIG } from '../policy/policy.module';
 import { HR_SYSTEM } from '../hr/hr.module';
-import { HrApiClient } from '../hr/hr-api.client';
 import { AccessDeniedError } from '../policy/hr-access';
-import { loadConfig } from '../config';
 import type { Feature, HrSystem, PolicyConfig, VerifiedCaller } from '../types';
 import { AuditService } from './audit.service';
 import { buildTools, ToolDefinition } from './tools';
@@ -47,8 +45,8 @@ export class McpService {
     // the type metadata Nest would otherwise use to find class dependencies.
     @Inject(KnowledgeSearchService) search: KnowledgeSearchService,
     @Inject(AuditService) private readonly audit: AuditService,
-    // The live HR system. Optional so tests that don't use HR can leave it out.
-    @Optional() @Inject(HR_SYSTEM) hr: HrSystem = defaultHrSystem(),
+    // The live HR system. Always passed in (Nest provides it from HrModule), never built here.
+    @Inject(HR_SYSTEM) hr: HrSystem,
   ) {
     this.tools = buildTools(search, catalog, hr, policies);
   }
@@ -148,11 +146,6 @@ export class McpService {
       return errorResult(`Tool ${name} failed`);
     }
   }
-}
-
-function defaultHrSystem(): HrSystem {
-  const config = loadConfig();
-  return new HrApiClient(config.HR_API_URL ?? `http://127.0.0.1:${config.HR_API_PORT}`, config.HR_SERVICE_KEY);
 }
 
 function header(req: IncomingMessage, name: string): string | undefined {
