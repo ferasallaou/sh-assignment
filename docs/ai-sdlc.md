@@ -23,3 +23,7 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 ## Testing
 
 - Step 1: `npm test` runs 4 database tests (tables exist, pgvector works, full-text search works, bad config is rejected). All pass.
+
+## Review
+
+- **CI and lint:** the assistant added ESLint, Prettier and a GitHub Actions workflow (checks job, and a tests job with a pgvector Postgres service). It ran everything locally first. ESLint found 1 real issue (a re-thrown migration error that lost its original cause), which was fixed. Prettier reformatted 11 code and config files. Markdown docs were deliberately excluded from formatting. It also checked the CI steps in a clean copy (fresh `npm ci`, no `.env`): checks and all 48 tests passed.
