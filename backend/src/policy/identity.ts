@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { PolicyConfig, ToolName, VerifiedCaller } from '../types';
 
 /**
@@ -13,8 +14,8 @@ export function resolveCaller(
   userToken: string | undefined,
 ): VerifiedCaller | null {
   if (!agentKey || !userToken) return null;
-  const agent = config.agents.find((a) => a.api_key === agentKey);
-  const user = config.users.find((u) => u.token === userToken);
+  const agent = config.agents.find((a) => sameSecret(a.api_key, agentKey));
+  const user = config.users.find((u) => sameSecret(u.token, userToken));
   if (!agent || !user) return null;
   return { agent, user };
 }
@@ -22,4 +23,13 @@ export function resolveCaller(
 /** Tools are granted per agent. Checked when listing tools AND again on every call. */
 export function canUseTool(caller: VerifiedCaller, tool: string): tool is ToolName {
   return (caller.agent.allowed_tools as string[]).includes(tool);
+}
+
+/**
+ * Compares two secrets in constant time, so response timing gives no hint of how much of a
+ * guessed key was right. Hashing first gives both sides the same length, which timingSafeEqual needs.
+ */
+function sameSecret(expected: string, given: string): boolean {
+  const digest = (value: string) => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(expected), digest(given));
 }

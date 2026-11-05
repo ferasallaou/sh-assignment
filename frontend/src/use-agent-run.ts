@@ -37,7 +37,7 @@ export function useAgentRun(params: AskParams): RunState {
       setState((current) => ({
         ...current,
         status: 'error',
-        error: 'Lost the connection to the web API. Is "npm run api" running?',
+        error: 'Lost the connection to the web API. Start everything with "npm run start".',
       }));
     };
     return () => source.close();

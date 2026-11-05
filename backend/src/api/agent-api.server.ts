@@ -7,6 +7,7 @@ import { AgentRouter } from '../agent/router';
 import type { AgentEvent, AgentPolicy, AskStreamEvent, DemoAgent, DemoUser, LlmProvider, PolicyConfig } from '../types';
 
 const MAX_QUESTION_LENGTH = 500;
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
 
 /**
  * A small HTTP API for the web page. It picks an agent with the router (unless one is named),
@@ -37,7 +38,8 @@ export class AgentApiServer {
   async listen(port: number, host = '127.0.0.1'): Promise<string> {
     this.httpServer = createServer((req, res) => {
       this.route(req, res).catch((error) => {
-        if (!res.headersSent) sendJson(res, 500, { error: (error as Error).message });
+        console.error(`Web API request failed: ${(error as Error).message}`);
+        if (!res.headersSent) sendJson(res, 500, { error: GENERIC_ERROR });
         else res.end();
       });
     });
@@ -135,11 +137,13 @@ export class AgentApiServer {
 
 class ClientLeftError extends Error {}
 
+/** The browser gets a short, safe message; the full error stays in the server log. */
 function friendlyError(error: Error, mcpUrl: string): string {
+  console.error(`Agent run failed: ${error.message}`);
   if (/fetch failed|ECONNREFUSED/i.test(error.message)) {
     return `Could not reach the MCP service at ${mcpUrl}. Is "npm run mcp" running?`;
   }
-  return error.message;
+  return GENERIC_ERROR;
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {

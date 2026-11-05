@@ -21,6 +21,7 @@ import { ProductMarkdownConnector } from '../src/connectors/product-markdown.con
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
 import { KnowledgeSearchService } from '../src/knowledge/knowledge-search.service';
+import { hrNotConnected } from '../src/hr/hr-not-connected';
 import { AuditService } from '../src/mcp/audit.service';
 import { McpService } from '../src/mcp/mcp.service';
 import { loadPolicyConfig } from '../src/policy/policy-config';
@@ -94,7 +95,13 @@ async function main(): Promise<void> {
     catalog,
     embedder,
   );
-  const mcp = new McpService(policies, catalog, new KnowledgeSearchService(pool, embedder), new AuditService(pool));
+  const mcp = new McpService(
+    policies,
+    catalog,
+    new KnowledgeSearchService(pool, embedder),
+    new AuditService(pool),
+    hrNotConnected,
+  );
   const url = await mcp.listen(0);
 
   const connect = (userId: string, agentKey = 'dev-agent-roadmap') =>

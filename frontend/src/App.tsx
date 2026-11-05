@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { agentName, joinOr } from './agent-names';
 import type { DemoAgent, DemoUser } from './api-types';
 import { RunPanel } from './RunPanel';
+import { pickUser } from './pick-user';
 import type { AskParams } from './use-agent-run';
 
 /** Starters, not finished questions: clicking one fills the box so the user can finish it. */
@@ -20,7 +21,7 @@ export function App() {
   const [users, setUsers] = useState<DemoUser[]>([]);
   const [agents, setAgents] = useState<DemoAgent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [who, setWho] = useState('paula');
+  const [who, setWho] = useState('');
   const [question, setQuestion] = useState('');
   const [runs, setRuns] = useState<AskParams[]>([]);
   const [showLoginInfo, setShowLoginInfo] = useState(false);
@@ -37,6 +38,8 @@ export function App() {
         if (!cancelled) {
           setUsers(loadedUsers);
           setAgents(loadedAgents);
+          // Start as the first user in the list, so the page never acts as someone who isn't there.
+          setWho((current) => pickUser(loadedUsers, current));
         }
       } catch {
         if (cancelled) return;
@@ -53,7 +56,7 @@ export function App() {
   function ask(event?: FormEvent) {
     event?.preventDefault();
     const q = question.trim();
-    if (!q || users.length === 0) return;
+    if (!q || !who || users.length === 0) return;
     const runId = Date.now();
     const ids = who === EVERYONE ? users.map((u) => u.id) : [who];
     setRuns(ids.map((id, i) => ({ user: id, question: q, runId: runId + i })));

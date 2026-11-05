@@ -155,13 +155,12 @@ export class SyncService {
         // Old chunks (and their embeddings) are replaced; new ones get embeddings after the sync.
         await client.query('DELETE FROM chunks WHERE record_id = $1', [recordId]);
         const pieces = splitIntoChunks(record.title, record.content);
-        for (const [index, piece] of pieces.entries()) {
-          await client.query('INSERT INTO chunks (record_id, chunk_index, content) VALUES ($1, $2, $3)', [
-            recordId,
-            index,
-            piece,
-          ]);
-        }
+        // One statement for all chunks of the record, instead of one per chunk.
+        await client.query(
+          `INSERT INTO chunks (record_id, chunk_index, content)
+           SELECT $1, piece.ord - 1, piece.content FROM unnest($2::text[]) WITH ORDINALITY AS piece(content, ord)`,
+          [recordId, pieces],
+        );
       }
 
       // Links are cheap, so they are always rebuilt; feature IDs or text may have changed.
@@ -236,13 +235,13 @@ export class SyncService {
           if (vectors.length !== rows.length) {
             throw new Error(`embedding provider returned ${vectors.length} vectors for ${rows.length} texts`);
           }
-          for (const [index, row] of rows.entries()) {
-            await this.pool.query('UPDATE chunks SET embedding = $1::vector, embedding_model = $2 WHERE id = $3', [
-              toPgVector(vectors[index]),
-              this.embedder.name,
-              row.id,
-            ]);
-          }
+          // One statement for the whole batch, instead of one per chunk.
+          await this.pool.query(
+            `UPDATE chunks SET embedding = batch.vector::vector, embedding_model = $3
+             FROM unnest($1::bigint[], $2::text[]) AS batch(id, vector)
+             WHERE chunks.id = batch.id`,
+            [rows.map((row) => row.id), vectors.map(toPgVector), this.embedder.name],
+          );
           chunksEmbedded += rows.length;
         }
       } catch (error) {
