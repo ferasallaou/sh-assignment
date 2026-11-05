@@ -1,0 +1,14 @@
+# How AI was used (AI-SDLC log)
+
+A running, factual log. Updated as the work happens; nothing here is written ahead of time.
+
+The repository history was rebuilt from an earlier working repo into one clean commit per step. The code and notes were carried over unchanged; each step's log entry is added in the same commit as that step.
+
+Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
+
+## Design
+
+- Read the assignment PDF and the job posting with the assistant, then shaped the system through a long back-and-forth discussion: what "knowledge" covers (documents, records, live data), whose permission counts (agent scope **and** user), where the router fits, and copying vs live lookup.
+- Used web search through the assistant to check how others build "context layers" for agents and which products exist (Glean, Onyx, Microsoft Copilot, n8n), to prepare the buy-vs-build section.
+- The human pushed back several times: when the assistant mixed up "build a chatbot" with "build the knowledge layer", when it rushed to tool names before the big picture was agreed, and when it then over-asked about low-stakes details. The human also wrote their own design outline, which the assistant reviewed for gaps.
+- Decisions were saved in `DECISIONS.md`, `PLAN.md` and `CLAUDE.md`, and updated whenever something changed, to avoid drift between sessions.
