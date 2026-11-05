@@ -251,9 +251,9 @@ describe('router', () => {
   });
   const user = (id: string) => policies.users.find((u) => u.id === id)!;
 
-  it('offers the roadmap and HR agents to staff, and nothing to a user with no groups', () => {
+  it('offers all three agents to staff, only HR to the HR team, and nothing to a user with no groups', () => {
     const router = new AgentRouter(replying(''), policies);
-    expect(router.offeredTo(user('eli')).map((a) => a.id)).toEqual(['roadmap-agent', 'hr-agent']);
+    expect(router.offeredTo(user('eli')).map((a) => a.id)).toEqual(['roadmap-agent', 'product-faq-agent', 'hr-agent']);
     expect(router.offeredTo(user('nina'))).toEqual([]);
     expect(router.offeredTo(user('hana')).map((a) => a.id)).toEqual(['hr-agent']);
   });

@@ -15,6 +15,8 @@ export interface DemoAgent {
   description: string;
   allowedSources: string[];
   allowedTools: string[];
+  /** Users in any of these groups may be sent to this agent by the router. */
+  offeredToGroups: string[];
 }
 
 /**

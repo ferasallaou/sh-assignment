@@ -66,6 +66,7 @@ export class AgentApiServer {
         description: a.description,
         allowedSources: a.allowed_sources,
         allowedTools: a.allowed_tools,
+        offeredToGroups: a.offered_to_groups,
       }));
       return sendJson(res, 200, agents);
     }

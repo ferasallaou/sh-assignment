@@ -1,63 +1,84 @@
+import { useState } from 'react';
 import type { DemoUser } from './api-types';
+import { agentName } from './agent-names';
 import { Answer } from './Answer';
 import { RecordChip } from './RecordChip';
 import { useAgentRun, type AskParams } from './use-agent-run';
 
-/** One live agent run: the user it acts for, each tool call as it happens, then the answer. */
-export function RunPanel({ params, user }: { params: AskParams; user?: DemoUser }) {
+/**
+ * One question and its answer. How the answer was found (the router's choice and each lookup
+ * through the MCP service) is shown live while it runs, then folds away behind one line.
+ */
+export function RunPanel({ params, user, showUser }: { params: AskParams; user?: DemoUser; showUser: boolean }) {
   const state = useAgentRun(params);
+  const [expanded, setExpanded] = useState(false);
+  const running = state.status === 'running';
+  const agent = state.route?.agentId ? agentName(state.route.agentId) : null;
+  const refused = state.steps.filter((s) => s.result?.isError).length;
+
+  let summary: string;
+  if (running) summary = state.route ? 'Looking things up…' : 'Choosing an assistant…';
+  else if (state.steps.length === 0) summary = 'How this was answered';
+  else
+    summary = `${state.steps.length} lookup${state.steps.length === 1 ? '' : 's'}${refused ? ` · ${refused} refused` : ''}`;
 
   return (
-    <article className="panel" aria-live="polite">
+    <article className="panel" aria-live="polite" aria-busy={running}>
       <header className="panel-head">
-        <span className="panel-user">{user?.name ?? params.user}</span>
-        <span className="panel-groups">groups: {user?.groups.join(', ') ?? '?'}</span>
-        <span className={`status status-${state.status}`}>
-          {state.status === 'running' ? 'working…' : state.status}
-        </span>
+        {showUser && <p className="panel-user">{user?.name ?? params.user}</p>}
+        <h2 className="panel-question">{params.question}</h2>
+        {agent && <p className="panel-meta">Answered by the {agent}</p>}
       </header>
 
-      {state.route ? (
-        <p className="route">
-          {state.route.agentId ? (
-            <>
-              Router chose <strong>{state.route.agentId}</strong>: {state.route.reason}
-            </>
-          ) : (
-            <>No assistant picked.</>
-          )}
-        </p>
-      ) : (
-        state.status === 'running' && <p className="route quiet">Choosing an assistant…</p>
-      )}
-
-      <ol className="steps">
-        {state.steps.map((step, index) => (
-          <li key={index} className="step">
-            <div className="step-call">
-              <span className="step-tool">{step.name}</span>
-              <code className="step-args">{JSON.stringify(step.args)}</code>
-            </div>
-            <div className="step-result">
-              {!step.result && <span className="quiet">waiting…</span>}
-              {step.result?.isError && <span className="error-text">refused or failed</span>}
-              {step.result && !step.result.isError && step.result.recordIds.length === 0 && (
-                <span className="quiet">nothing this user may see</span>
-              )}
-              {step.result?.recordIds.map((id) => (
-                <RecordChip key={id} id={id} />
-              ))}
-            </div>
-          </li>
-        ))}
-        {state.status === 'running' && state.route && state.steps.every((s) => s.result) && (
-          <li className="step step-thinking">
-            <span className="pulse" aria-hidden /> thinking…
-          </li>
+      <details
+        className="trace"
+        open={running || expanded}
+        onToggle={(e) => {
+          if (!running) setExpanded(e.currentTarget.open);
+        }}
+      >
+        <summary>
+          {running && <span className="pulse" aria-hidden />}
+          {summary}
+        </summary>
+        {state.route && (
+          <p className="trace-route">
+            {state.route.agentId ? (
+              <>
+                Sent to the {agent}: {state.route.reason}
+              </>
+            ) : (
+              'No assistant was picked.'
+            )}
+          </p>
         )}
-      </ol>
+        <ol className="trace-steps">
+          {state.steps.map((step, index) => (
+            <li key={index}>
+              <code className="trace-tool">{step.name}</code>
+              {step.args !== null && Object.keys(step.args as object).length > 0 && (
+                <code className="trace-args">{JSON.stringify(step.args)}</code>
+              )}
+              <span className="trace-result">
+                {!step.result && <span className="quiet">…</span>}
+                {step.result?.isError && <span className="error-text">refused</span>}
+                {step.result && !step.result.isError && step.result.recordIds.length === 0 && (
+                  <span className="quiet">nothing you may see</span>
+                )}
+                {step.result?.recordIds.map((id) => (
+                  <RecordChip key={id} id={id} />
+                ))}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {user && (
+          <p className="trace-who">
+            Checked as {user.name}, groups: {user.groups.join(', ') || 'none'}
+          </p>
+        )}
+      </details>
 
-      {state.limitReached && <p className="warning">Limit reached ({state.limitReached}), answering now.</p>}
       {state.status === 'error' && <p className="error-box">{state.error}</p>}
       {state.run && <Answer run={state.run} />}
     </article>

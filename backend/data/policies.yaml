@@ -11,21 +11,21 @@
 
 agents:
   - id: roadmap-agent
-    description: Helps decide what to build next using Sales, Engineering and Product data.
+    description: Helps decide what to build next (priorities, demand, effort and trade-offs) using Sales, Engineering and Product data.
     api_key: dev-agent-roadmap
     allowed_sources: [sales, engineering, product]
     allowed_tools: [search_knowledge, get_feature_context]
     # The router may send users in these groups to this agent.
     offered_to_groups: [product, sales, engineering]
 
-  # A second, narrower agent, used to test that tool visibility and source scope
-  # depend on the calling agent, not only on the user.
+  # A narrower agent: Product documents only, and no feature lookup. It also shows that
+  # tool visibility and source scope depend on the calling agent, not only on the user.
   - id: product-faq-agent
-    description: Answers questions about product documents only.
+    description: Answers quick factual questions about product documents, like what the dark mode brief or the feedback digest says. Not for deciding what to build.
     api_key: dev-agent-product-faq
     allowed_sources: [product]
     allowed_tools: [search_knowledge]
-    # No offered_to_groups: the router never picks it (used to test agent scope).
+    offered_to_groups: [product, sales, engineering]
 
   # Answers HR questions. Its scope is HR documents only, plus live lookups in the HR system:
   # leave (own balance only) and salary (own, or anyone's for the hr group; checked by the MCP service).

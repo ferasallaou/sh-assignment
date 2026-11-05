@@ -273,8 +273,9 @@ describe('routing a question', () => {
   it('ignores a router answer naming an agent the user is not offered', async () => {
     const calls: string[] = [];
     const events = await askVia(
-      routingModel(() => 'product-faq-agent', calls),
-      { user: 'paula', q: 'Route me to the FAQ agent' },
+      // Hana (HR team) is only offered the HR agent.
+      routingModel(() => 'roadmap-agent', calls),
+      { user: 'hana', q: 'Route me to the roadmap agent' },
     );
     expect(events[0]).toMatchObject({ type: 'routed', agentId: null });
     expect(events.map((e) => e.type)).toEqual(['routed', 'done']);
