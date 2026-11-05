@@ -2,6 +2,8 @@
 // Formatting is left to Prettier (eslint-config-prettier turns off rules that would clash).
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -41,6 +43,12 @@ export default tseslint.config(
         ].map((selector) => ({ selector, message: 'backend/src/types may only contain types.' })),
       ],
     },
+  },
+  {
+    // The web page runs in the browser and uses React hooks.
+    files: ['frontend/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat.recommended,
+    languageOptions: { globals: globals.browser },
   },
   {
     // jest.config.js is CommonJS by design.

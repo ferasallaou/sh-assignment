@@ -30,6 +30,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      # Checks the web page still builds.
+      - run: npm run build -w frontend
 
   tests:
     name: Tests

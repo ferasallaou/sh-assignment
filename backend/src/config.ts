@@ -9,6 +9,8 @@ import { z } from 'zod';
 const configSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://knowledge:knowledge@localhost:5433/knowledge'),
   MCP_PORT: z.coerce.number().int().min(0).max(65535).default(3100),
+  // The web API that streams agent runs to the frontend (npm run api).
+  API_PORT: z.coerce.number().int().min(0).max(65535).default(3200),
   // The agent CLI: which agent key it uses and where the MCP service is (default: localhost on MCP_PORT).
   AGENT_KEY: z.preprocess(emptyToUndefined, z.string().min(1).default('dev-agent-roadmap')),
   MCP_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
