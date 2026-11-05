@@ -12,3 +12,14 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 - Used web search through the assistant to check how others build "context layers" for agents and which products exist (Glean, Onyx, Microsoft Copilot, n8n), to prepare the buy-vs-build section.
 - The human pushed back several times: when the assistant mixed up "build a chatbot" with "build the knowledge layer", when it rushed to tool names before the big picture was agreed, and when it then over-asked about low-stakes details. The human also wrote their own design outline, which the assistant reviewed for gaps.
 - Decisions were saved in `DECISIONS.md`, `PLAN.md` and `CLAUDE.md`, and updated whenever something changed, to avoid drift between sessions.
+
+## Implementation
+
+- **Step 1 (skeleton):** the assistant wrote the project setup, the Docker database, the SQL schema, the migration runner, the config check and the first test. Problems found while running it, and how they were fixed:
+  - TypeScript 7 removed an old setting, and ts-jest doesn't support it yet → pinned TypeScript `~5.9`.
+  - NestJS 12 is ESM-only and failed to load under Jest → pinned NestJS `^11`.
+  - The test tried to start an HTTP server it didn't need → it now starts only Nest's dependency container.
+
+## Testing
+
+- Step 1: `npm test` runs 4 database tests (tables exist, pgvector works, full-text search works, bad config is rejected). All pass.
