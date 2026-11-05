@@ -7,7 +7,7 @@ export interface AuditEntry {
   userId: string;
   tool: string;
   arguments: unknown;
-  /** false = the caller was not allowed to use this tool. */
+  /** false = the caller was not allowed to use this tool, or not allowed to see what they asked for. */
   allowed: boolean;
   /** How many results were returned; null when the call was refused or failed. */
   resultCount: number | null;

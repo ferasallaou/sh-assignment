@@ -7,6 +7,8 @@ import { Pool } from 'pg';
 import { AgentApiServer } from '../src/api/agent-api.server';
 import { EngineeringJsonConnector } from '../src/connectors/engineering-json.connector';
 import { HrMarkdownConnector } from '../src/connectors/hr-markdown.connector';
+import { HrApiClient } from '../src/hr/hr-api.client';
+import { HrApiServer } from '../src/hr/hr-api.server';
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
@@ -20,6 +22,7 @@ import type { AskStreamEvent, LlmProvider } from '../src/types';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const policies = loadPolicyConfig();
 let mcp: McpService;
+const hrApi = new HrApiServer('test-hr-key', undefined, 0);
 let api: AgentApiServer;
 let apiUrl: string;
 let mcpUrl: string;
@@ -77,7 +80,14 @@ beforeAll(async () => {
     catalog,
     null,
   ).syncAll();
-  mcp = new McpService(policies, catalog, new KnowledgeSearchService(pool, null), new AuditService(pool));
+  const hrUrl = await hrApi.listen(0);
+  mcp = new McpService(
+    policies,
+    catalog,
+    new KnowledgeSearchService(pool, null),
+    new AuditService(pool),
+    new HrApiClient(hrUrl, 'test-hr-key'),
+  );
   mcpUrl = await mcp.listen(0);
   api = new AgentApiServer(policies, scriptedModel, mcpUrl);
   apiUrl = await api.listen(0);
@@ -86,13 +96,14 @@ beforeAll(async () => {
 afterAll(async () => {
   await api.close();
   await mcp.close();
+  await hrApi.close();
   await pool.end();
 });
 
 describe('listing users and agents', () => {
   it('lists users without their tokens', async () => {
     const body = await (await fetch(`${apiUrl}/api/users`)).text();
-    expect(JSON.parse(body).map((u: { id: string }) => u.id)).toEqual(['paula', 'sam', 'eli', 'nina']);
+    expect(JSON.parse(body).map((u: { id: string }) => u.id)).toEqual(['paula', 'sam', 'eli', 'nina', 'hana']);
     expect(body).not.toMatch(/dev-user-|token/);
   });
 

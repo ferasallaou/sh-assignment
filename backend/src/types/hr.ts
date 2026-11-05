@@ -15,12 +15,24 @@ export interface LeaveBalance {
   updatedAt: string;
 }
 
+/** One person's pay, as the HR system reports it. Never stored by us. */
+export interface Salary {
+  userId: string;
+  employeeNumber: number;
+  jobTitle: string;
+  baseSalaryEur: number;
+  bonusTargetPercent: number;
+  effectiveFrom: string;
+  updatedAt: string;
+}
+
 /**
- * The HR system's API, reached live at question time.
- * The mock reads a JSON file (src/hr/mock-hr-system.ts); production would call the HR
- * system (Workday, Personio, ...) with the user's own token.
+ * The HR system's API, reached live at question time (over HTTP: src/hr/hr-api.client.ts).
+ * It answers for exactly the user it is asked about. Deciding WHO may ask about whom is the
+ * MCP service's job (src/policy/hr-access.ts), not the HR client's.
  */
 export interface HrSystem {
-  /** The balance of exactly this user, or null if the HR system has no record for them. */
+  /** null if the HR system has no record for this user. */
   getLeaveBalance(userId: string): Promise<LeaveBalance | null>;
+  getSalary(userId: string): Promise<Salary | null>;
 }

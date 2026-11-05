@@ -13,7 +13,9 @@ import { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
 import { canUseTool, resolveCaller } from '../policy/identity';
 import { POLICY_CONFIG } from '../policy/policy.module';
 import { HR_SYSTEM } from '../hr/hr.module';
-import { MockHrSystem } from '../hr/mock-hr-system';
+import { HrApiClient } from '../hr/hr-api.client';
+import { AccessDeniedError } from '../policy/hr-access';
+import { loadConfig } from '../config';
 import type { Feature, HrSystem, PolicyConfig, VerifiedCaller } from '../types';
 import { AuditService } from './audit.service';
 import { buildTools, ToolDefinition } from './tools';
@@ -45,10 +47,10 @@ export class McpService {
     // the type metadata Nest would otherwise use to find class dependencies.
     @Inject(KnowledgeSearchService) search: KnowledgeSearchService,
     @Inject(AuditService) private readonly audit: AuditService,
-    // The live HR system. Optional so tests can build the service without it (they get the mock).
-    @Optional() @Inject(HR_SYSTEM) hr: HrSystem = new MockHrSystem(),
+    // The live HR system. Optional so tests that don't use HR can leave it out.
+    @Optional() @Inject(HR_SYSTEM) hr: HrSystem = defaultHrSystem(),
   ) {
-    this.tools = buildTools(search, catalog, hr);
+    this.tools = buildTools(search, catalog, hr, policies);
   }
 
   /** Starts the HTTP server. Port 0 picks a free port (used by tests). Returns the URL. */
@@ -132,6 +134,11 @@ export class McpService {
       await this.audit.record({ ...base, allowed: true, resultCount });
       return { content: [{ type: 'text', text: JSON.stringify(output, null, 2) }] };
     } catch (error) {
+      if (error instanceof AccessDeniedError) {
+        // The tool was granted, but this user may not see what they asked for.
+        await this.audit.record({ ...base, allowed: false, resultCount: null });
+        return errorResult(error.message);
+      }
       await this.audit.record({ ...base, allowed: true, resultCount: null });
       if (error instanceof ZodError) {
         const problems = error.issues.map((i) => `${i.path.join('.') || '(arguments)'}: ${i.message}`).join('; ');
@@ -141,6 +148,11 @@ export class McpService {
       return errorResult(`Tool ${name} failed`);
     }
   }
+}
+
+function defaultHrSystem(): HrSystem {
+  const config = loadConfig();
+  return new HrApiClient(config.HR_API_URL ?? `http://127.0.0.1:${config.HR_API_PORT}`, config.HR_SERVICE_KEY);
 }
 
 function header(req: IncomingMessage, name: string): string | undefined {

@@ -27,14 +27,14 @@ agents:
     allowed_tools: [search_knowledge]
     # No offered_to_groups: the router never picks it (used to test agent scope).
 
-  # Answers HR questions. Its scope is HR documents only, plus the live leave lookup,
-  # which only ever returns the signed-in user's own balance.
+  # Answers HR questions. Its scope is HR documents only, plus live lookups in the HR system:
+  # leave (own balance only) and salary (own, or anyone's for the hr group; checked by the MCP service).
   - id: hr-agent
-    description: Answers questions about HR policies and your own leave, such as how many vacation days you have left.
+    description: Answers HR questions - HR policies, leave and vacation days, salary and pay.
     api_key: dev-agent-hr
     allowed_sources: [hr]
-    allowed_tools: [search_knowledge, get_leave_balance]
-    offered_to_groups: [product, sales, engineering]
+    allowed_tools: [search_knowledge, get_leave_balance, get_salary]
+    offered_to_groups: [product, sales, engineering, hr]
 
 users:
   - id: paula
@@ -60,3 +60,9 @@ users:
     name: Nina (New hire, no groups yet)
     token: dev-user-nina
     groups: []
+
+  # HR team: may see colleagues' pay through the HR agent, and the HR-only salary bands.
+  - id: hana
+    name: Hana (HR Business Partner)
+    token: dev-user-hana
+    groups: [hr]

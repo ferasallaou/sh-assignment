@@ -4,7 +4,7 @@ import { parse } from 'yaml';
 import { z } from 'zod';
 
 /** The tools the MCP service offers. Agents may only be granted tools from this list. */
-export const TOOL_NAMES = ['search_knowledge', 'get_feature_context', 'get_leave_balance'] as const;
+export const TOOL_NAMES = ['search_knowledge', 'get_feature_context', 'get_leave_balance', 'get_salary'] as const;
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 /** The sources the knowledge base syncs. Agents may only be scoped to these. */

@@ -26,7 +26,8 @@
     "check": "npm run lint && npm run format:check && npm run typecheck",
     "web": "npm run dev -w frontend",
     "api": "npm run api -w backend --",
-    "dev": "concurrently -n mcp,api,web -c blue,magenta,green \"npm run mcp\" \"npm run api\" \"npm run web\""
+    "dev": "concurrently -n hr,mcp,api,web -c yellow,blue,magenta,green \"npm run hr-api\" \"npm run mcp\" \"npm run api\" \"npm run web\"",
+    "hr-api": "npm run hr-api -w backend --"
   },
   "engines": {
     "node": ">=20"

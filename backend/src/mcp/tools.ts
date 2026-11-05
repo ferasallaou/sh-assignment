@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
-import type { Feature, HrSystem, ToolName, VerifiedCaller } from '../types';
+import { AccessDeniedError, canSeeSalaryOf, findEmployee } from '../policy/hr-access';
+import type { Feature, HrSystem, PolicyConfig, ToolName, VerifiedCaller } from '../types';
 
 /**
  * The tools the MCP service offers.
@@ -25,6 +26,22 @@ const featureInput = z
 // No fields at all: the balance is always the signed-in user's own, so there is nothing to ask for.
 const leaveInput = z.object({}).strict();
 
+// The model may name a colleague. That is only a request: the MCP service decides (hr-access.ts).
+const salaryInput = z
+  .object({
+    employee: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .optional()
+      .describe("A colleague's name. Leave out for the current user's own salary."),
+  })
+  .strict();
+
+/** The one answer for any refused salary request, so a refusal never reveals whether someone exists. */
+const SALARY_REFUSAL = 'Not allowed: you can only see your own salary.';
+
 export interface ToolDefinition {
   name: ToolName;
   description: string;
@@ -33,7 +50,12 @@ export interface ToolDefinition {
   run(caller: VerifiedCaller, args: unknown): Promise<{ output: unknown; resultCount: number }>;
 }
 
-export function buildTools(search: KnowledgeSearchService, catalog: Feature[], hr: HrSystem): ToolDefinition[] {
+export function buildTools(
+  search: KnowledgeSearchService,
+  catalog: Feature[],
+  hr: HrSystem,
+  policies: PolicyConfig,
+): ToolDefinition[] {
   const featureList = catalog.map((f) => `${f.key} (${f.name})`).join(', ');
   return [
     {
@@ -81,6 +103,35 @@ export function buildTools(search: KnowledgeSearchService, catalog: Feature[], h
           sourceUpdatedAt: balance.updatedAt,
           fetchedAt: new Date().toISOString(),
           ...balance,
+        };
+        return { output: { records: [record] }, resultCount: 1 };
+      },
+    },
+    {
+      name: 'get_salary',
+      description:
+        'Returns a salary (job title, base pay, bonus target), fetched live from the HR system. Leave out ' +
+        "`employee` for the current user's own salary. To ask about a colleague, pass their name: the " +
+        'service decides whether the current user may see it, so always ask rather than deciding yourself.',
+      inputSchema: toInputSchema(salaryInput),
+      async run(caller, args) {
+        const { employee } = salaryInput.parse(args);
+        const target = employee ? findEmployee(policies, employee) : caller.user;
+        // Unknown names and forbidden names get the same refusal, so nothing leaks either way.
+        if (!target || !canSeeSalaryOf(caller, target)) throw new AccessDeniedError(SALARY_REFUSAL);
+        const salary = await hr.getSalary(target.id);
+        if (!salary)
+          return {
+            output: { records: [], message: 'The HR system has no salary record for this person.' },
+            resultCount: 0,
+          };
+        const record = {
+          externalId: `HRIS-${salary.employeeNumber}`,
+          source: 'hr-system (live)',
+          title: `Salary: ${target.name}`,
+          sourceUpdatedAt: salary.updatedAt,
+          fetchedAt: new Date().toISOString(),
+          ...salary,
         };
         return { output: { records: [record] }, resultCount: 1 };
       },

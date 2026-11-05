@@ -572,7 +572,7 @@ The PoC (this repository) builds one vertical slice: the roadmap question "Shoul
 | Gateway: identity, policy, retrieval, audit | MCP over HTTP; agent key + user token; both must allow, in SQL; tool visibility and re-check; audit log | Mock keys in `policies.yaml` instead of SSO and token exchange; simple in-code policy instead of Cedar/OPA |
 | Hybrid search | Keyword + meaning, merged by rank; keyword fallback | — |
 | Agents | Roadmap and HR agents sharing one tool loop with limits and citation checks; a router that picks the agent (checked JSON, only agents offered to the user) | Router is one model call with no confidence score or fallback to a second agent |
-| Live access | `get_leave_balance`: the user's own balance fetched at question time from a mocked HR system, never stored | A JSON file stands in for the HR API; no token exchange |
+| Live access | Leave balances and salaries fetched at question time from a separate mock HR web service, never stored; salary access (own, or HR for anyone) decided and audited by the MCP service | A local service over a JSON file stands in for the HR API; one shared service key instead of token exchange |
 | Models | OpenRouter through LangChain, behind our interfaces | Not production-grade for residency (section 7) |
 | Quality | Retrieval and answer test sets, leak checks, 6-scenario demo, 100+ automated tests, CI | No production monitoring or alerting |
 

@@ -87,3 +87,12 @@ Why: the PoC showed copied knowledge only. This shows the other two ideas from t
 - **The page drops the agent picker** and shows which agent was chosen and why. The web API keeps an optional `agent` setting for tests and for comparing agents on purpose; the MCP service checks access the same way either way.
 - **Left out:** sending one question to several agents, follow-up questions, and the router learning from mistakes.
 
+## HR web service and salaries (decided 2026-11-05, step 13)
+
+- **The pretend HR system is a separate web service**, so the live path looks like a real external call: the MCP service sends an HTTP request with its own service key (`x-hr-service-key`) and the user ID, and gets one person's data back. It reads its JSON file on every request. Production would use the HR system's API with token exchange, so the HR system can also check the user itself.
+- **Salary is live, never copied,** like leave balances.
+- **Salary access is decided by the MCP service, not the model.** `get_salary` takes an optional colleague name (`employee`), so the model can try; the MCP service checks: your own pay, yes; someone else's, only for the `hr` group. Anything else is refused with one message ("You can only see your own salary"), whether the colleague exists or not, so a refusal reveals nothing. Refusals are logged with `allowed = false`. The HR agent is told not to decide access itself, so the check really runs and shows up on the page.
+- **Why leave stays no-input:** nobody in the demo needs anyone else's leave, so the simplest safe tool is one that can't be pointed at another person. Salary shows the other pattern: a tool that can name someone, guarded by a rule in code.
+- **Hana (HR)** is added to show the allowed case: she sees colleagues' pay and the HR-only salary bands (HR-2).
+- **If the HR service is down,** the tool fails with a clear message and the agent says it couldn't reach HR; nothing falls back to old data.
+
