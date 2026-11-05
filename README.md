@@ -170,7 +170,7 @@ Needs `OPENROUTER_API_KEY` in `backend/.env`. One command starts the MCP service
 npm run dev
 ```
 
-Then open http://localhost:5173. Pick who you are (Paula, Sam, or **Compare both** to run the same question as each side by side), pick the agent, and ask. Each tool call appears as it happens with the record IDs it returned (coloured by department), then the answer with its cited sources.
+Then open http://localhost:5173. Pick who you are (one of the four demo users below, or **Compare all** to run the same question as each of them side by side), pick the asking app, and ask. Each tool call appears as it happens with the record IDs it returned (coloured by department), then the answer with its cited sources.
 
 ![The web page comparing Paula and Sam](docs/images/web-page.jpg)
 
@@ -218,6 +218,34 @@ npm run format       # fix formatting
 ```
 
 GitHub Actions runs both on every pull request.
+
+## Demo users and agents
+
+All of them live in `backend/data/policies.yaml`.
+
+| User | Groups | Sees | Doesn't see |
+|---|---|---|---|
+| Paula (Product Manager) | product | Engineering tickets, all Product docs, shared deals | The confidential Lidl deal (S-103) |
+| Sam (Account Executive) | sales | All deals, shared Product docs | The dark mode tickets (ENG-42, ENG-43; only the bulk export ticket ENG-51 is shared with Sales), the Product-only roadmap draft (PRD-9) |
+| Eli (Engineer) | engineering | Engineering tickets, the dark mode brief (PRD-7) | Any deal, the feedback digest, the roadmap draft |
+| Nina (New hire) | none yet | Nothing | Everything: a valid login alone gives no access |
+
+Nobody sees ENG-60, because it has no permission info (deny by default).
+
+| Agent | Can read | Tools |
+|---|---|---|
+| roadmap-agent | Sales, Engineering, Product | search_knowledge, get_feature_context |
+| product-faq-agent | Product | search_knowledge |
+
+### Add a user or an agent
+
+1. Add an entry to `backend/data/policies.yaml`:
+   - **User:** `id`, `name`, `token` (any unique string) and `groups`, matched against each record's `allowed_groups`.
+   - **Agent:** `id`, `description`, `api_key` (unique), `allowed_sources` (any of `sales`, `engineering`, `product`) and `allowed_tools` (any of `search_knowledge`, `get_feature_context`). The file is checked on start: duplicate keys or unknown tools stop the service with a clear error.
+2. Restart: `npm run dev` (or `npm run mcp` and `npm run api`).
+3. Nothing else to change. The page reads users and agents from the web API (`/api/users`, `/api/agents`), which reads the same file, so new entries appear in its menus. In the CLI, use `--user <id>` and `AGENT_KEY=<api_key>`.
+
+A new agent gets its own access rules but the same instructions and tool loop as the roadmap agent (`backend/src/agent/roadmap-agent.ts`). An agent that should behave differently (for example an HR helper) needs its own instructions in code.
 
 ## Project layout
 
