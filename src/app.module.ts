@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConnectorsModule } from './connectors/connectors.module';
 import { DatabaseModule } from './database/database.module';
+import { SyncModule } from './sync/sync.module';
 
 /**
- * Root module. Feature modules (connectors, sync, knowledge, policy, mcp,
- * providers, agent) are added here as each build step lands.
+ * Root module. Feature modules (policy, mcp, agent) are added here
+ * as each build step lands.
  */
 @Module({
-  imports: [DatabaseModule, ConnectorsModule],
+  imports: [DatabaseModule, SyncModule],
 })
 export class AppModule {}

@@ -7,13 +7,14 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "tsx scripts/migrate.ts",
+    "sync": "tsx scripts/sync.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "jest --runInBand",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run format:check && npm run typecheck"
+    "check": "npm run lint && npm run format:check && npm run typecheck",
+    "test": "jest --runInBand"
   },
   "engines": {
     "node": ">=20"

@@ -57,7 +57,11 @@ describe('database setup', () => {
         `INSERT INTO chunks (record_id, chunk_index, content) VALUES ($1, 0, 'Customers keep asking for dark mode')`,
         [record.rows[0].id],
       );
-      const match = await client.query(`SELECT 1 FROM chunks WHERE tsv @@ plainto_tsquery('english', 'asking dark')`);
+      // Only look at this test's record: other test files may have left data in the test database.
+      const match = await client.query(
+        `SELECT 1 FROM chunks WHERE record_id = $1 AND tsv @@ plainto_tsquery('english', 'asking dark')`,
+        [record.rows[0].id],
+      );
       expect(match.rowCount).toBe(1);
     } finally {
       await client.query('ROLLBACK');

@@ -22,12 +22,20 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 
 - **Step 2 (mock data and identities):** the assistant designed the mock records around three features, so each demo scenario has a concrete case: a sales-only record, records linked only by alias, a ticket with missing permissions, and a document with a planted instruction. It added a second, narrower agent to test tool visibility, plus validated loaders for `policies.yaml` and `features.yaml`.
 - **Step 3 (connectors):** the assistant wrote the Sales CSV, Engineering JSON and Product Markdown connectors behind one shared interface. While designing it, it found that file sources can't report deletions, so it extended the planned interface with `isFullSnapshot` (sync deletes whatever is missing). Because of that, any bad item fails the whole source, so a partial read can never trigger wrong deletions. It also added `title`, `explicitFeatureKeys` and nullable `allowedGroups` to the record shape, and updated `CLAUDE.md` to match.
+- **Step 4 (sync):** the assistant wrote the sync service, chunker, feature linker (by ID, then alias, without AI) and the `npm run sync` command. Design choices it made and recorded:
+  - A second fingerprint per record, so permission-only changes skip re-chunking.
+  - An empty-export guard against wiping a source.
+  - Per-source failure isolation.
+  - Embeddings as a separate "fill what's missing" pass, so a model outage never blocks syncing.
+  - A separate test database after noticing that sync tests would otherwise wipe the demo data.
+  - The first full test run caught a step 1 test that assumed an empty database; it was fixed to check only its own record.
 
 ## Testing
 
 - Step 1: `npm test` runs 4 database tests (tables exist, pgvector works, full-text search works, bad config is rejected). All pass.
 - Step 2: 9 more tests (policies and catalog are valid, duplicate keys and unknown tools are rejected, and the mock data contains every demo case). 13 tests in total, all passing.
 - Step 3: 14 more connector tests (field mapping, quoted CSV text, missing permissions become "unknown", missing feature IDs, bad rows, invalid JSON, duplicate IDs, missing front matter, and the snapshot fingerprint changing only on edits). 27 tests in total, all passing on the first run.
+- Step 4: 21 more tests for chunking, linking, and sync (adds, edits, permission-only changes, deletes of rows and files, skipping unchanged sources, the empty-export guard, a broken source not blocking others, retry after failure, and embeddings filled later). 48 tests in total, all passing. Also ran `npm run sync` twice on the demo database: the first run added 12 records and warned about ENG-60, and the second run changed nothing.
 
 ## Review
 
