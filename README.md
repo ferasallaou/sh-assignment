@@ -14,12 +14,10 @@ The demo question is: _"Should we prioritize dark mode next?"_
 | 5 | Permission-aware search | ✅ Done |
 | 6 | MCP service (identity, tool access, audit log) | ✅ Done |
 | 7 | AI models through OpenRouter | ✅ Done |
-| 8 | Roadmap agent you can ask questions | Next |
-| 9 | Evaluation set, demo script for the 6 scenarios | To do |
+| 8 | Roadmap agent you can ask questions | ✅ Done |
+| 9 | Evaluation set, demo script for the 6 scenarios | Next |
 | 10 | Design document | To do |
 | 11 | Optional: small web page showing the agent's steps live | If time allows |
-
-Until step 8 lands, you can sync the data and query the MCP service directly (shown below), but nothing answers plain-English questions yet.
 
 ## What the PoC proves
 
@@ -75,6 +73,8 @@ The first sync adds 12 records and prints one warning: ticket `ENG-60` has no pe
 | `DATABASE_URL` | `postgres://knowledge:knowledge@localhost:5433/knowledge` | The demo database |
 | `TEST_DATABASE_URL` | Same server, database `knowledge_test` | Tests (never touches demo data) |
 | `MCP_PORT` | `3100` | The MCP service |
+| `AGENT_KEY` | `dev-agent-roadmap` | Which agent the CLI acts as |
+| `MCP_URL` | `http://127.0.0.1:<MCP_PORT>/mcp` | Where the CLI finds the MCP service |
 | `OPENROUTER_API_KEY` | (empty) | AI models. Without it, search uses keywords only and the agent can't run |
 | `OPENROUTER_CHAT_MODEL` | `anthropic/claude-sonnet-5.5` | The agent's chat model (must support tool calls) |
 | `OPENROUTER_EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Meaning search. Changing it is safe: the next sync re-embeds everything |
@@ -135,7 +135,32 @@ Any MCP client that can send custom headers over Streamable HTTP can connect too
 
 ## Run the agent demo
 
-Coming in step 8 (`Should we prioritize dark mode next?`, asked as Paula and as Sam).
+Needs `OPENROUTER_API_KEY` in `.env` and the MCP service running (`npm run mcp` in another terminal).
+
+```bash
+npm run agent -- --user paula "Should we prioritize dark mode next?"
+npm run agent -- --user sam "Should we prioritize dark mode next?"
+```
+
+The agent prints each tool call as it happens, then the answer, then the sources it cited (with where each came from and when it was last updated):
+
+```text
+→ get_feature_context {"feature":"dark-mode"}
+  ← 7 records: ENG-43 ENG-42 PRD-9 PRD-11 PRD-7 S-102 S-101
+→ search_knowledge {"query":"dark mode"}
+  ← 5 records: PRD-7 ENG-42 S-101 ENG-43 S-102
+
+**Recommendation: Yes, make dark mode a near-term priority, but start with the charts spike (ENG-43) ...
+```
+
+What to look for (from a real run):
+
+- **Paula (Product)** gets engineering effort and risks ([ENG-42], [ENG-43]) and the Q1 roadmap draft, but never the confidential Lidl deal.
+- **Sam (Sales)** gets the Lidl deal ([S-103], €240k at risk), but no engineering tickets, and the agent says that evidence is missing.
+- **Both** runs notice the planted "ignore previous instructions" text in the feedback digest and treat it as content.
+- If the answer cites an ID that no tool returned, the CLI flags it.
+
+`--user` picks a user from `policies.yaml` (a demo shortcut; in production the token comes from the user's login). Set `AGENT_KEY=dev-agent-product-faq` to ask through the narrower agent.
 
 ## Tests
 
@@ -154,7 +179,7 @@ GitHub Actions runs both on every pull request.
 ```text
 data/          mock sources, feature list (features.yaml), agents and users (policies.yaml)
 db/migrations/ SQL schema
-scripts/       migrate, sync, mcp, check-models
+scripts/       migrate, sync, mcp, agent, check-models
 src/
   connectors/  one per source, behind a shared interface
   sync/        adds, edits and deletes; chunks; feature links
@@ -162,6 +187,8 @@ src/
   policy/      agents, users, identity, tool grants
   mcp/         MCP service, tools, audit log
   providers/   AI model adapters (OpenRouter through LangChain)
+  agent/       roadmap agent: our own tool loop, MCP client
+  types/       shared types (types only)
 tests/
 docs/ai-sdlc.md  how AI was used to build this
 ```
