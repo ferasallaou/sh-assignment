@@ -42,18 +42,17 @@ The brief allows any reasonable assumption if it is stated. The assumptions belo
 | # | Assumption | Why it matters |
 |---|---|---|
 | A1 | **Scale:** ~15,000 employees, ~40 departments, ~50 source systems, ~50M records and ~5M documents (~2 TB of text), ~1–2M changes per day. | Sizes the store, the queue and the embedding cost. Section 7 shows where the design changes if this is 10× larger. |
-| A2 | **Regions:** at least the EU (ShopFully, Italy) and North America (Flipp, Canada), possibly APAC. Some data must stay in its region (GDPR, employee data). | Drives one store per region and regional model endpoints. |
-| A3 | **Identity:** one company login (Okta or Microsoft Entra ID) with groups, synced to apps by SCIM. Every employee and every agent has an identity. | Permissions can be expressed as company groups. Without this, section 5 needs a per-source identity mapping. |
-| A4 | **Typical sources:** Salesforce (Sales), Jira and GitHub (Engineering), Notion or Confluence (Product), Google Drive or SharePoint (documents and PDFs), Workday (People), NetSuite and a data warehouse (Finance). | Shapes the connector list in section 3. |
-| A5 | **Load:** tens of agents, ~50–200 knowledge queries per second at peak, p95 retrieval latency under ~1 second. | Rules out live-only designs for most data. |
-| A6 | **Freshness:** minutes for most sources, under 1 minute for permission removals, under 24 hours for anything that relies on the nightly comparison. | Defines the sync triggers and the monitoring targets. |
-| A7 | **Agents are read-only** at first. Any action that changes a source system goes through that system's own API with explicit human confirmation, outside this layer. | Keeps the blast radius of a wrong or manipulated agent small. |
-| A8 | Most sources expose **permissions we can read** (sharing settings, roles, groups). Some do not, such as PDFs on shared drives with loose folder rights. | Section 3.5 covers sources without reliable permissions. |
+| A2 | **Identity:** one company login (Okta or Microsoft Entra ID) with groups, synced to apps by SCIM. Every employee and every agent has an identity. | Permissions can be expressed as company groups. Without this, section 5 needs a per-source identity mapping. |
+| A3 | **Typical sources:** Salesforce (Sales), Jira and GitHub (Engineering), Notion or Confluence (Product), Google Drive or SharePoint (documents and PDFs), Workday (People), NetSuite and a data warehouse (Finance). | Shapes the connector list in section 3. |
+| A4 | **Load:** tens of agents, ~50–200 knowledge queries per second at peak, p95 retrieval latency under ~1 second. | Rules out live-only designs for most data. |
+| A5 | **Freshness:** minutes for most sources, under 1 minute for permission removals, under 24 hours for anything that relies on the nightly comparison. | Defines the sync triggers and the monitoring targets. |
+| A6 | **Agents are read-only** at first. Any action that changes a source system goes through that system's own API with explicit human confirmation, outside this layer. | Keeps the blast radius of a wrong or manipulated agent small. |
+| A7 | Most sources expose **permissions we can read** (sharing settings, roles, groups). Some do not, such as PDFs on shared drives with loose folder rights. | Section 3.5 covers sources without reliable permissions. |
 
 ### Where I question the brief
 
 - **"Knowledge base" is too narrow for some data.** A leave balance or a salary must not be copied into a shared store just so an agent can read it. The design treats **live access** as part of the knowledge layer, not an exception to it.
-- **"Authorized at the moment they act"** cannot be fully guaranteed by any copy. A copy is only as fresh as its last permission update. I make this explicit: removals propagate fast (A6), the most sensitive sources are never copied, and a check can re-confirm with the source before something is returned (section 5.4).
+- **"Authorized at the moment they act"** cannot be fully guaranteed by any copy. A copy is only as fresh as its last permission update. I make this explicit: removals propagate fast (A5), the most sensitive sources are never copied, and a check can re-confirm with the source before something is returned (section 5.4).
 - **"Without manual intervention"** applies to keeping data in sync. It should not apply to **ambiguous decisions**, such as whether two records describe the same customer. Those go to a review queue with a named owner (section 4.3).
 - **Who owns knowledge quality?** The brief does not say. I assume each department owns its source's data contract and fixes its data, and the platform team owns the pipeline. This needs agreement, because a knowledge layer without owners decays.
 
@@ -360,7 +359,7 @@ Rules that are easy to get wrong, and how they are handled:
 
 A copy can be behind its source. For each sensitivity class:
 
-- **Internal:** stored permissions, kept fresh by events and reconciliation (target: removals within 1 minute, A6).
+- **Internal:** stored permissions, kept fresh by events and reconciliation (target: removals within 1 minute, A5).
 - **Confidential:** as above, plus a **just-in-time re-check** with the source for the few records about to be returned, where the source has a cheap permission API (for example, Drive). This costs latency, so it is used only here.
 - **Restricted** (pay, health, legal matters): **not stored at all**. Live access only.
 
@@ -373,7 +372,7 @@ For live-only sources, the gateway's live connector calls the source **with the 
 The access layer assumes the model **can** be manipulated, and makes that harmless:
 
 - **Prompt injection** in documents ("ignore all previous instructions…") can't widen access, because access is decided by verified identity and the database filter, not by the model. Tool results are marked as data, not instructions. (PoC: tested with a planted instruction, and with a scripted "attacker" model.)
-- **Agents are read-only** (A7), have **step and call limits**, and a **budget** per agent and per user.
+- **Agents are read-only** (A6), have **step and call limits**, and a **budget** per agent and per user.
 - **Answers must cite sources.** The agent checks that every cited ID came back from a tool in this run and flags any that didn't. (PoC: as built.)
 - **Rate limits and anomaly alerts:** for example, one user's agent suddenly reading thousands of confidential records.
 
@@ -453,18 +452,6 @@ sequenceDiagram
 | **Policy engine** | Cedar or OPA, compiled into SQL filters | Reviewable, testable rules; one place to change them | Rules scattered in code; asking the model to "respect permissions" |
 | **Observability** | OpenTelemetry traces, Prometheus and Grafana, plus an LLM tracing tool (Langfuse or similar) | One trace from question to tool calls to records | Logs only |
 | **Evaluation** | Our own harness (as in the PoC) run in CI, plus sampled human review; optionally Ragas-style metrics | Leak tests must be hard gates, which generic tools don't provide | Only "LLM as judge" |
-
-### Buy vs build
-
-| Option | What it offers | Why not (or not alone) |
-|---|---|---|
-| **Glean** | Enterprise search with many connectors and permission-aware results; an agent platform | Strong candidate to **buy** for document search. But it is a closed system: custom record linking, exact record queries, regional residency and our own audit and policy rules depend on its roadmap. Worth a serious evaluation. |
-| **Microsoft Copilot (Graph connectors)** | Permission-aware search over Microsoft 365 and connected sources | Best if the company is all-in on Microsoft; weaker for cross-tool records and custom agents |
-| **Onyx (open source)** | Self-hosted enterprise search and connectors | Permission syncing is in the paid edition; we would still build linking and exact queries |
-| **n8n** | Workflow automation with AI steps | Good for workflows, not a knowledge layer. Deletions and permission sync are weak spots. |
-| **Airbyte / Nango / Merge** | Ready-made connectors | **Use** where they read deletions and permissions reliably (section 3.3) |
-
-**Recommendation:** build the core (store, linking, gateway, policy, evaluation), because cross-department linking and "both must allow" access are the differentiators. Buy connectors where they are good enough. Run a time-boxed comparison with Glean before committing, since buying could cover most document search.
 
 ---
 
@@ -586,7 +573,6 @@ What the PoC **proves**: knowledge from three departments is linked, stays curre
 2. What delay is acceptable for **permission removals**, per sensitivity class?
 3. Do departments accept **owning data contracts** and fixing quarantined data?
 4. Is there an existing company **event bus** or **data warehouse** we should build on instead of new queues and copies?
-5. Is the company standardized on **Microsoft 365 or Google Workspace**? This changes the buy-vs-build answer (Copilot vs Glean).
-6. Which **regions** and residency rules apply, and are they per country?
-7. Will agents need to **take actions** soon? That needs a separate design for confirmations and write permissions.
-8. What uptime and latency targets does the gateway need?
+5. Which **regions** and residency rules apply, and are they per country?
+6. Will agents need to **take actions** soon? That needs a separate design for confirmations and write permissions.
+7. What uptime and latency targets does the gateway need?
