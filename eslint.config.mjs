@@ -5,7 +5,7 @@ import prettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/', 'coverage/', 'node_modules/'] },
+  { ignores: ['**/dist/', '**/coverage/', '**/node_modules/'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -24,9 +24,9 @@ export default tseslint.config(
     },
   },
   {
-    // src/types holds shared types only (see CLAUDE.md). Anything that exists at runtime
+    // backend/src/types holds shared types only (see CLAUDE.md). Anything that exists at runtime
     // (functions, classes, constants, enums, value exports) belongs next to the code that uses it.
-    files: ['src/types/**/*.ts'],
+    files: ['backend/src/types/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -38,7 +38,7 @@ export default tseslint.config(
           "ImportDeclaration[importKind='value']",
           "ExportNamedDeclaration[exportKind='value']",
           "ExportAllDeclaration[exportKind='value']",
-        ].map((selector) => ({ selector, message: 'src/types may only contain types.' })),
+        ].map((selector) => ({ selector, message: 'backend/src/types may only contain types.' })),
       ],
     },
   },
