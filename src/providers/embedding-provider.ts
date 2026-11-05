@@ -1,11 +1,14 @@
 /**
  * Turns texts into "meaning" vectors for similarity search.
- * The real implementation (OpenRouter, behind LangChain) arrives in step 7.
- * Until then the provider is `null` and chunks wait without embeddings;
- * search can still use full-text matching.
+ * The real implementation is OpenRouter through LangChain (openrouter-embedding.provider.ts).
+ * With no API key the provider is `null`: chunks wait without embeddings and
+ * search uses full-text matching only.
  */
 export interface EmbeddingProvider {
-  /** A short name for logs, e.g. "openrouter:openai/text-embedding-3-small". */
+  /**
+   * Identifies the model, e.g. "openrouter:openai/text-embedding-3-small". It is stored with every
+   * embedding, so vectors from different models are never compared and a model change re-embeds.
+   */
   readonly name: string;
   embed(texts: string[]): Promise<number[][]>;
 }

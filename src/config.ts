@@ -9,7 +9,20 @@ import { z } from 'zod';
 const configSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://knowledge:knowledge@localhost:5433/knowledge'),
   MCP_PORT: z.coerce.number().int().min(0).max(65535).default(3100),
+  // AI models through OpenRouter. With no key, there is no chat model and search uses keywords only.
+  // An empty value counts as "not set", so a blank line in .env doesn't break startup.
+  OPENROUTER_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  OPENROUTER_BASE_URL: z.preprocess(emptyToUndefined, z.string().url().default('https://openrouter.ai/api/v1')),
+  OPENROUTER_CHAT_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default('anthropic/claude-sonnet-5.5')),
+  OPENROUTER_EMBEDDING_MODEL: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).default('openai/text-embedding-3-small'),
+  ),
 });
+
+function emptyToUndefined(value: unknown): unknown {
+  return value === '' ? undefined : value;
+}
 
 export type AppConfig = z.infer<typeof configSchema>;
 

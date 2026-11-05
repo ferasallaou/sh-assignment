@@ -32,6 +32,8 @@ export interface SyncReport {
 }
 
 const EMBED_BATCH_SIZE = 64;
+/** A chunk needs (re-)embedding if it has no vector, or one made by another model. $1 = current model name. */
+const NEEDS_EMBEDDING = 'embedding IS NULL OR embedding_model IS DISTINCT FROM $1';
 
 /**
  * Keeps the knowledge base matching the sources.
@@ -236,7 +238,10 @@ export class SyncService {
     return result.rowCount ?? 0;
   }
 
-  /** Embeds chunks that have no embedding yet. Failures leave them waiting for the next sync. */
+  /**
+   * Embeds chunks that have no embedding yet, or one from a different model than the current one
+   * (so changing the embedding model re-embeds everything). Failures leave them waiting for the next sync.
+   */
   private async embedPendingChunks(): Promise<Omit<SyncReport, 'sources'>> {
     let chunksEmbedded = 0;
     let embeddingError: string | undefined;
@@ -245,8 +250,8 @@ export class SyncService {
       try {
         for (;;) {
           const { rows } = await this.pool.query<{ id: string; content: string }>(
-            'SELECT id, content FROM chunks WHERE embedding IS NULL ORDER BY id LIMIT $1',
-            [EMBED_BATCH_SIZE],
+            `SELECT id, content FROM chunks WHERE ${NEEDS_EMBEDDING} ORDER BY id LIMIT $2`,
+            [this.embedder.name, EMBED_BATCH_SIZE],
           );
           if (rows.length === 0) break;
           const vectors = await this.embedder.embed(rows.map((row) => row.content));
@@ -254,8 +259,9 @@ export class SyncService {
             throw new Error(`embedding provider returned ${vectors.length} vectors for ${rows.length} texts`);
           }
           for (const [index, row] of rows.entries()) {
-            await this.pool.query('UPDATE chunks SET embedding = $1::vector WHERE id = $2', [
+            await this.pool.query('UPDATE chunks SET embedding = $1::vector, embedding_model = $2 WHERE id = $3', [
               toPgVector(vectors[index]),
+              this.embedder.name,
               row.id,
             ]);
           }
@@ -266,7 +272,11 @@ export class SyncService {
       }
     }
 
-    const { rows } = await this.pool.query<{ count: string }>('SELECT count(*) FROM chunks WHERE embedding IS NULL');
+    const { rows } = this.embedder
+      ? await this.pool.query<{ count: string }>(`SELECT count(*) FROM chunks WHERE ${NEEDS_EMBEDDING}`, [
+          this.embedder.name,
+        ])
+      : await this.pool.query<{ count: string }>('SELECT count(*) FROM chunks WHERE embedding IS NULL');
     return { chunksEmbedded, chunksWaitingForEmbedding: Number(rows[0].count), embeddingError };
   }
 

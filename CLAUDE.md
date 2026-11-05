@@ -77,6 +77,7 @@ Sales CSV · Engineering JSON · Product Markdown
 - **Search (step 5, `src/knowledge/knowledge-search.service.ts`):** `search` (question) and `getFeatureContext` (feature key) take a `VerifiedCaller` (agent + user, `src/policy/caller.ts`). One SQL condition is used everywhere: the record's source is in the agent's scope AND its groups overlap the user's groups; NULL groups never match. Search merges keyword ranking (full-text, any of the words) and meaning ranking (pgvector) with reciprocal rank fusion, one result per record. With no embedding provider, or if it fails, search falls back to keywords only. Restricted and missing give the same empty answer, with no counts.
 - **MCP service (step 6, `src/mcp/`, run with `npm run mcp`, port `MCP_PORT`, default 3100):** stateless Streamable HTTP at `/mcp`, POST only. Each request sends `x-agent-key` and `x-user-token`; both must match `policies.yaml` or the answer is 401, the same for every kind of bad key. A fresh MCP server is built per request for that caller, using the SDK's low-level `Server` (so tool listing is per caller and calls to hidden tools can be audited). Every call re-checks the agent's tools; a hidden tool and a non-existent one give the same "Unknown tool" error. Tool inputs are strict and have no identity fields. Every call, allowed or not, goes to `audit_log`. MCP SDK is `@modelcontextprotocol/sdk` 1.x (the `latest` tag; the split 2.x packages were not used).
 - **Nest injection rule:** always use explicit `@Inject(...)` on constructor parameters. Scripts run through tsx, which doesn't emit decorator type metadata, so class-typed injection silently gives `undefined`.
+- **AI models (step 7, `src/providers/`):** `OpenRouterChatProvider` (LangChain `ChatOpenAI` pointed at OpenRouter, temperature 0, tools bound in the OpenAI function format) behind `LlmProvider`, and `OpenRouterEmbeddingProvider` (LangChain `OpenAIEmbeddings`) behind `EmbeddingProvider`. Defaults: chat `anthropic/claude-sonnet-5.5`, embeddings `openai/text-embedding-3-small` (1536 numbers); change with `OPENROUTER_CHAT_MODEL` / `OPENROUTER_EMBEDDING_MODEL`. Both are `null` without `OPENROUTER_API_KEY` (a blank value counts as unset). `LlmReply` for tool calls also carries any text the model wrote. Each chunk stores `embedding_model`; sync re-embeds chunks from a different model, and search only compares with vectors from the current model, so switching models is safe. Tests never call OpenRouter (stand-ins replace the LangChain models); `npm run models:check` calls the real models once.
 - **Tests use a separate database** (`knowledge_test`, created and migrated by `tests/global-setup.ts`), so `npm test` never touches the demo data.
 - **Schema notes:** permissions live only on `records`; chunks inherit them by joining back to their record. The `embedding` column has no fixed dimension so the model can change, which means exact vector search with no approximate index (fine at PoC size).
 
@@ -173,7 +174,7 @@ interface LlmProvider {
 
 type LlmReply =
   | { type: 'text'; text: string }
-  | { type: 'tool_calls'; calls: { id: string; name: string; args: unknown }[] };
+  | { type: 'tool_calls'; text: string; calls: { id: string; name: string; args: unknown }[] };
 
 interface EmbeddingProvider {
   embed(texts: string[]): Promise<number[][]>;

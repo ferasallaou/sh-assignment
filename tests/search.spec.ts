@@ -168,6 +168,14 @@ describe('search (keywords + meaning)', () => {
     expect(ids(hybrid.results)).not.toContain('ENG-60');
   });
 
+  it('only compares the question with vectors from the same model', async () => {
+    // A different model (even one with the same vector length) must not be compared with the stored vectors.
+    const otherModel: EmbeddingProvider = { ...topicEmbedder, name: 'another-model' };
+    const response = await new KnowledgeSearchService(pool, otherModel).search(paula, 'nightwork ui', 20);
+    expect(response.mode).toBe('hybrid');
+    expect(response.results).toEqual([]);
+  });
+
   it('falls back to keyword search if the embedding model fails', async () => {
     const broken: EmbeddingProvider = {
       name: 'broken',

@@ -13,13 +13,13 @@ The demo question is: _"Should we prioritize dark mode next?"_
 | 1–4 | Database, mock data, connectors, sync | ✅ Done |
 | 5 | Permission-aware search | ✅ Done |
 | 6 | MCP service (identity, tool access, audit log) | ✅ Done |
-| 7 | AI models through OpenRouter | Next |
-| 8 | Roadmap agent you can ask questions | To do |
+| 7 | AI models through OpenRouter | ✅ Done |
+| 8 | Roadmap agent you can ask questions | Next |
 | 9 | Evaluation set, demo script for the 6 scenarios | To do |
 | 10 | Design document | To do |
 | 11 | Optional: small web page showing the agent's steps live | If time allows |
 
-Until steps 7 and 8 land, you can sync the data and query the MCP service directly (shown below), but nothing answers plain-English questions yet.
+Until step 8 lands, you can sync the data and query the MCP service directly (shown below), but nothing answers plain-English questions yet.
 
 ## What the PoC proves
 
@@ -58,7 +58,13 @@ npm run db:migrate   # creates the tables
 npm run sync         # loads the mock sources
 ```
 
-The first sync adds 12 records and prints one warning: ticket `ENG-60` has no permissions in its source, so it is stored but denied to everyone. Running sync again changes nothing.
+With `OPENROUTER_API_KEY` set, check the key and models first (costs a fraction of a cent):
+
+```bash
+npm run models:check
+```
+
+The first sync adds 12 records and prints one warning: ticket `ENG-60` has no permissions in its source, so it is stored but denied to everyone. With a key set, it also embeds the 12 chunks for meaning search. Running sync again changes nothing.
 
 `npm run db:down` stops the database. The data is kept in a Docker volume.
 
@@ -69,7 +75,9 @@ The first sync adds 12 records and prints one warning: ticket `ENG-60` has no pe
 | `DATABASE_URL` | `postgres://knowledge:knowledge@localhost:5433/knowledge` | The demo database |
 | `TEST_DATABASE_URL` | Same server, database `knowledge_test` | Tests (never touches demo data) |
 | `MCP_PORT` | `3100` | The MCP service |
-| `OPENROUTER_API_KEY` | (empty) | AI models, from step 7. Without it, search uses keywords only |
+| `OPENROUTER_API_KEY` | (empty) | AI models. Without it, search uses keywords only and the agent can't run |
+| `OPENROUTER_CHAT_MODEL` | `anthropic/claude-sonnet-5.5` | The agent's chat model (must support tool calls) |
+| `OPENROUTER_EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Meaning search. Changing it is safe: the next sync re-embeds everything |
 
 ## Run sync
 
@@ -119,7 +127,7 @@ Paula gets 7 records (including the engineering tickets). Sam gets 5, including 
 
 - `"method":"tools/list"` with the Product FAQ agent key: only `search_knowledge` is listed.
 - A wrong or missing key: `401`.
-- `search_knowledge` with `{"query":"dark mode","limit":3}`.
+- `search_knowledge` with `{"query":"screens too bright for staff at night","limit":4}`. With a key set, `mode` is `hybrid` and it finds the dark mode records without the words "dark mode".
 
 Every call is recorded in the `audit_log` table.
 
@@ -146,14 +154,14 @@ GitHub Actions runs both on every pull request.
 ```text
 data/          mock sources, feature list (features.yaml), agents and users (policies.yaml)
 db/migrations/ SQL schema
-scripts/       migrate, sync, mcp
+scripts/       migrate, sync, mcp, check-models
 src/
   connectors/  one per source, behind a shared interface
   sync/        adds, edits and deletes; chunks; feature links
   knowledge/   permission-aware search and feature lookup
   policy/      agents, users, identity, tool grants
   mcp/         MCP service, tools, audit log
-  providers/   AI model adapters (step 7)
+  providers/   AI model adapters (OpenRouter through LangChain)
 tests/
 docs/ai-sdlc.md  how AI was used to build this
 ```

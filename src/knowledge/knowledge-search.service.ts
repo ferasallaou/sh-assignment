@@ -69,7 +69,7 @@ export class KnowledgeSearchService {
 
     const { rows } = await this.pool.query<ResultRow & { record_id: string }>(
       `WITH allowed AS (
-         SELECT c.id, c.tsv, c.embedding
+         SELECT c.id, c.tsv, c.embedding, c.embedding_model
          FROM chunks c JOIN records r ON r.id = c.record_id
          WHERE ${ACCESS_FILTER}
        ),
@@ -86,7 +86,8 @@ export class KnowledgeSearchService {
        meaning AS (
          SELECT a.id, row_number() OVER (ORDER BY a.embedding <=> $4::vector, a.id) AS rank
          FROM allowed a
-         WHERE $4::vector IS NOT NULL AND a.embedding IS NOT NULL
+         -- Only compare with vectors from the same model as the question's vector.
+         WHERE $4::vector IS NOT NULL AND a.embedding IS NOT NULL AND a.embedding_model = $5
          ORDER BY rank LIMIT ${CANDIDATES_PER_RANKING}
        ),
        fused AS (
@@ -100,7 +101,7 @@ export class KnowledgeSearchService {
        JOIN chunks c ON c.id = f.id
        JOIN records r ON r.id = c.record_id
        ORDER BY f.score DESC, c.id`,
-      [scope.sources, scope.groups, query, queryVector],
+      [scope.sources, scope.groups, query, queryVector, this.embedder?.name ?? null],
     );
 
     // Several pieces of one record can match; keep only the best one per record.
