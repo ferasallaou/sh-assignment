@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import type { DemoUser } from './api-types';
+import { agentName } from './agent-names';
 import { Answer } from './Answer';
 import { RecordChip } from './RecordChip';
 import { useAgentRun, type AskParams } from './use-agent-run';
-
-const AGENT_NAMES: Record<string, string> = {
-  'roadmap-agent': 'Roadmap assistant',
-  'hr-agent': 'HR assistant',
-  'product-faq-agent': 'Product FAQ assistant',
-};
 
 /**
  * One question and its answer. How the answer was found (the router's choice and each lookup
@@ -18,7 +13,7 @@ export function RunPanel({ params, user, showUser }: { params: AskParams; user?:
   const state = useAgentRun(params);
   const [expanded, setExpanded] = useState(false);
   const running = state.status === 'running';
-  const agent = state.route?.agentId ? (AGENT_NAMES[state.route.agentId] ?? state.route.agentId) : null;
+  const agent = state.route?.agentId ? agentName(state.route.agentId) : null;
   const refused = state.steps.filter((s) => s.result?.isError).length;
 
   let summary: string;

@@ -279,13 +279,13 @@ All of them live in `backend/data/policies.yaml`.
 | Nina (New hire) | none yet | Nothing | Everything: a valid login alone gives no access |
 | Hana (HR Business Partner) | hr | HR policies including the salary bands (HR-2), colleagues' salaries | Sales, Engineering and Product data (the router only offers her the HR agent) |
 
-Nobody sees ENG-60, because it has no permission info (deny by default). Paula, Sam and Eli can see the leave policy (HR-1) through the HR agent and get only their own leave balance and salary; only Hana sees the salary bands (HR-2) and colleagues' salaries. Nina has no HR record yet.
+Nobody sees ENG-60, because it has no permission info (deny by default). Paula, Sam and Eli can use all three assistants (the page's header lists the ones the signed-in user may use). They can see the leave policy (HR-1) through the HR agent and get only their own leave balance and salary; only Hana sees the salary bands (HR-2) and colleagues' salaries. Nina has no HR record yet.
 
 | Agent | Can read | Tools | Router offers it to |
 |---|---|---|---|
 | roadmap-agent | Sales, Engineering, Product | search_knowledge, get_feature_context | product, sales, engineering |
 | hr-agent | HR | search_knowledge, get_leave_balance, get_salary | product, sales, engineering, hr |
-| product-faq-agent | Product | search_knowledge | nobody (used to test agent scope) |
+| product-faq-agent | Product | search_knowledge | product, sales, engineering |
 
 ### Add a user or an agent
 

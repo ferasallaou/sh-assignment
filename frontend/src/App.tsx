@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import type { DemoUser } from './api-types';
+import { agentName, joinOr } from './agent-names';
+import type { DemoAgent, DemoUser } from './api-types';
 import { RunPanel } from './RunPanel';
 import type { AskParams } from './use-agent-run';
 
@@ -17,6 +18,7 @@ const EVERYONE = '__everyone__';
 
 export function App() {
   const [users, setUsers] = useState<DemoUser[]>([]);
+  const [agents, setAgents] = useState<DemoAgent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [who, setWho] = useState('paula');
   const [question, setQuestion] = useState('');
@@ -29,9 +31,13 @@ export function App() {
     let cancelled = false;
     async function loadUsers(attempt: number): Promise<void> {
       try {
-        const response = await fetch('/api/users');
-        if (!response.ok) throw new Error();
-        if (!cancelled) setUsers(await response.json());
+        const [usersResponse, agentsResponse] = await Promise.all([fetch('/api/users'), fetch('/api/agents')]);
+        if (!usersResponse.ok || !agentsResponse.ok) throw new Error();
+        const [loadedUsers, loadedAgents] = await Promise.all([usersResponse.json(), agentsResponse.json()]);
+        if (!cancelled) {
+          setUsers(loadedUsers);
+          setAgents(loadedAgents);
+        }
       } catch {
         if (cancelled) return;
         if (attempt < 20) setTimeout(() => void loadUsers(attempt + 1), 500);
@@ -68,12 +74,22 @@ export function App() {
     requestAnimationFrame(() => box.current?.setSelectionRange(text.length, text.length));
   }
 
+  // The assistants the router may pick for whoever is signed in (from policies.yaml, never hard-coded).
+  const signedIn = who === EVERYONE ? users : users.filter((u) => u.id === who);
+  const available = agents.filter((a) => a.offeredToGroups.some((g) => signedIn.some((u) => u.groups.includes(g))));
+  const tagline =
+    users.length === 0
+      ? ''
+      : available.length === 0
+        ? 'No assistants are available to you yet. Ask your manager or IT for access.'
+        : `Ask the ${joinOr(available.map((a) => agentName(a.id).replace(' assistant', '')))} assistant. Answers only use what you may see.`;
+
   return (
     <div className="page">
       <header className="top">
         <div>
           <h1>Company Assistant</h1>
-          <p className="tagline">Ask about roadmap decisions, leave or pay. Answers only use what you may see.</p>
+          <p className="tagline">{tagline}</p>
         </div>
         <div className="signed-in">
           <label htmlFor="who">Signed in as</label>
