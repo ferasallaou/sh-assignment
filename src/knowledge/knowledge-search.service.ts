@@ -1,34 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Pool } from 'pg';
 import { DB_POOL } from '../database/database.module';
-import { accessScopeOf, VerifiedCaller } from '../policy/caller';
-import { EMBEDDING_PROVIDER, EmbeddingProvider, toPgVector } from '../providers/embedding-provider';
-
-/** One piece of knowledge the caller is allowed to see, with where it came from. */
-export interface KnowledgeResult {
-  source: string;
-  externalId: string;
-  title: string;
-  /** The matching text (a chunk for search, the full record for feature context). */
-  text: string;
-  /** When the source last changed this record (ISO 8601). */
-  sourceUpdatedAt: string;
-  /** Features this record is linked to, e.g. ['dark-mode']. */
-  features: string[];
-}
-
-export interface SearchResponse {
-  /** 'hybrid' = keywords + meaning; 'keyword' = no embedding provider (or it failed). */
-  mode: 'hybrid' | 'keyword';
-  results: KnowledgeResult[];
-}
-
-export interface FeatureContextResult extends KnowledgeResult {
-  /** How the record relates to the feature: 'requests', 'implements' or 'describes'. */
-  relation: string;
-  /** How the link was found: 'id' (explicit in the source) or 'alias' (name match). */
-  matchedBy: string;
-}
+import { accessScopeOf } from '../policy/caller';
+import { EMBEDDING_PROVIDER, toPgVector } from '../providers/embedding-provider';
+import type {
+  EmbeddingProvider,
+  FeatureContextResult,
+  KnowledgeResult,
+  SearchResponse,
+  VerifiedCaller,
+} from '../types';
 
 /** How many candidates each ranking contributes before they are merged. */
 const CANDIDATES_PER_RANKING = 20;

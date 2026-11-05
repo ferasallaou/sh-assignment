@@ -1,8 +1,6 @@
 import { z } from 'zod';
-import type { Feature } from '../knowledge/feature-catalog';
 import type { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
-import type { VerifiedCaller } from '../policy/caller';
-import type { ToolName } from '../policy/policy-config';
+import type { Feature, ToolName, VerifiedCaller } from '../types';
 
 /**
  * The tools the MCP service offers.

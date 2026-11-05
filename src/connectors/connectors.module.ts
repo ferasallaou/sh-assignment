@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { EngineeringJsonConnector } from './engineering-json.connector';
 import { ProductMarkdownConnector } from './product-markdown.connector';
 import { SalesCsvConnector } from './sales-csv.connector';
-import type { SourceConnector } from './source-connector';
+import type { SourceConnector } from '../types';
 
 /** Injection token for the list of all source connectors. */
 export const SOURCE_CONNECTORS = Symbol('SOURCE_CONNECTORS');

@@ -1,6 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
-import type { LlmProvider, LlmReply, Message, ToolSpec } from './llm-provider';
+import type { LlmProvider, LlmReply, Message, ToolSpec } from '../types';
 
 /** The part of a LangChain chat model we use. Lets tests pass a stand-in without network calls. */
 export interface ToolCallingChatModel {

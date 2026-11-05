@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
-import type { EmbeddingProvider } from './embedding-provider';
+import type { EmbeddingProvider } from '../types';
 
 /** The part of LangChain's embeddings class we use. Lets tests pass a stand-in. */
 export interface DocumentEmbedder {

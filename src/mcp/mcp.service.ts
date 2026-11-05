@@ -9,12 +9,10 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, CallToolResult, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { ZodError } from 'zod';
 import { FEATURE_CATALOG } from '../knowledge/knowledge.module';
-import type { Feature } from '../knowledge/feature-catalog';
 import { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
-import type { VerifiedCaller } from '../policy/caller';
 import { canUseTool, resolveCaller } from '../policy/identity';
 import { POLICY_CONFIG } from '../policy/policy.module';
-import type { PolicyConfig } from '../policy/policy-config';
+import type { Feature, PolicyConfig, VerifiedCaller } from '../types';
 import { AuditService } from './audit.service';
 import { buildTools, ToolDefinition } from './tools';
 

@@ -8,10 +8,9 @@ import { EngineeringJsonConnector } from '../src/connectors/engineering-json.con
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
-import { KnowledgeSearchService, KnowledgeResult } from '../src/knowledge/knowledge-search.service';
-import type { VerifiedCaller } from '../src/policy/caller';
+import { KnowledgeSearchService } from '../src/knowledge/knowledge-search.service';
 import { loadPolicyConfig } from '../src/policy/policy-config';
-import type { EmbeddingProvider } from '../src/providers/embedding-provider';
+import type { EmbeddingProvider, KnowledgeResult, VerifiedCaller } from '../src/types';
 import { SyncService } from '../src/sync/sync.service';
 
 /**

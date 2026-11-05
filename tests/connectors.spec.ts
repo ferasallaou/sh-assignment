@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { EngineeringJsonConnector } from '../src/connectors/engineering-json.connector';
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
-import { ChangeBatch, SourceRecord } from '../src/connectors/source-connector';
+import type { ChangeBatch, SourceRecord } from '../src/types';
 
 function records(batch: ChangeBatch): SourceRecord[] {
   return batch.changes.flatMap((change) => (change.type === 'upsert' ? [change.record] : []));

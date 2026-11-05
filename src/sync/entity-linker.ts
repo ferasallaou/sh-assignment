@@ -1,5 +1,4 @@
-import type { SourceRecord } from '../connectors/source-connector';
-import type { Feature } from '../knowledge/feature-catalog';
+import type { Feature, SourceRecord } from '../types';
 
 export interface FeatureLink {
   featureKey: string;

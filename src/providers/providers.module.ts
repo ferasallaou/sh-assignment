@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { loadConfig } from '../config';
-import { EMBEDDING_PROVIDER, EmbeddingProvider } from './embedding-provider';
-import { LLM_PROVIDER, LlmProvider } from './llm-provider';
+import type { EmbeddingProvider, LlmProvider } from '../types';
+import { EMBEDDING_PROVIDER } from './embedding-provider';
+import { LLM_PROVIDER } from './llm-provider';
 import { OpenRouterChatProvider } from './openrouter-chat.provider';
 import { OpenRouterEmbeddingProvider } from './openrouter-embedding.provider';
 

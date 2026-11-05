@@ -11,7 +11,7 @@ import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { EngineeringJsonConnector } from '../src/connectors/engineering-json.connector';
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
 import { loadFeatureCatalog } from '../src/knowledge/feature-catalog';
-import type { EmbeddingProvider } from '../src/providers/embedding-provider';
+import type { EmbeddingProvider } from '../src/types';
 import { SyncService } from '../src/sync/sync.service';
 
 /** A stand-in for the real model: same text always gives the same small vector. */
