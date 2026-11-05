@@ -6,6 +6,8 @@ It pulls data from three pretend department sources (Sales CSV, Engineering JSON
 
 The demo question is: _"Should we prioritize dark mode next?"_
 
+> **Extra (step 12): a router and an HR agent.** Ask _"How many vacation days do I have left?"_ on the web page. A router picks the HR agent (no agent picker), which reads the synced leave policy and fetches **your own** balance live from a pretend HR system. That balance is never copied into the knowledge base, and nobody can get someone else's. See [Router and HR agent](#router-and-hr-agent).
+
 ## Status
 
 | Step | What | State |
@@ -18,6 +20,7 @@ The demo question is: _"Should we prioritize dark mode next?"_
 | 9 | Evaluation set, demo script for the 6 scenarios | ✅ Done |
 | 10 | Design document ([`docs/design.md`](docs/design.md)) | ✅ Done |
 | 11 | Small web page showing the agent's steps live | ✅ Done |
+| 12 | Router and HR agent with a live leave lookup | ✅ Done |
 
 ## What the PoC proves
 
@@ -38,8 +41,10 @@ The demo question is: _"Should we prioritize dark mode next?"_
  PostgreSQL + pgvector     records · chunks · features · links · permissions · audit log
         ▲
         │  npm run sync (adds, edits, deletes; one transaction per record)
- Connectors       Sales CSV · Engineering JSON · Product Markdown   (backend/data/sources/)
+ Connectors       Sales CSV · Engineering JSON · Product Markdown · HR Markdown   (backend/data/sources/)
 ```
+
+The one exception to copying: leave balances. The MCP service fetches them live from the HR system (mocked in `backend/data/live/`) at question time, only for the signed-in user.
 
 ## Requirements
 
@@ -170,13 +175,33 @@ Needs `OPENROUTER_API_KEY` in `backend/.env`. One command starts the MCP service
 npm run dev
 ```
 
-Then open http://localhost:5173. Pick who you are (one of the four demo users below, or **Compare all** to run the same question as each of them side by side), pick the asking app, and ask. Each tool call appears as it happens with the record IDs it returned (coloured by department), then the answer with its cited sources.
+Then open http://localhost:5173. Pick who you are (one of the four demo users below, or **Compare all** to run the same question as each of them side by side) and ask. The router's choice of agent appears first, then each tool call as it happens with the record IDs it returned (coloured by source), then the answer with its cited sources.
 
 ![The web page comparing Paula and Sam](docs/images/web-page.jpg)
 
-How it works: the page calls a small web API (`backend/src/api/`, port `API_PORT`, default 3200), which runs the same roadmap agent as the CLI and streams each step to the browser with server-sent events. The agent still reaches the knowledge base only through the MCP service, with the chosen user's token, so the page gets exactly the same permission checks. Choosing the user on the page is a demo shortcut; in production it comes from the company login. The page never receives user tokens or agent keys. If the browser leaves mid-answer, the agent stops at its next step.
+How it works: the page calls a small web API (`backend/src/api/`, port `API_PORT`, default 3200), which routes the question, runs the chosen agent with the same loop as the CLI, and streams each step to the browser with server-sent events. The agent still reaches the knowledge base only through the MCP service, with the chosen user's token, so the page gets exactly the same permission checks. Choosing the user on the page is a demo shortcut; in production it comes from the company login. The page never receives user tokens or agent keys. If the browser leaves mid-answer, the agent stops at its next step.
 
 To run the parts on their own: `npm run mcp`, `npm run api` and `npm run web`.
+
+## Router and HR agent
+
+```text
+ question ──► router (one model call, answer checked) ──► roadmap-agent  or  hr-agent  (or "no assistant")
+                                                                │
+                                                                ▼
+                                              MCP service (agent key + user token)
+                                     search_knowledge ─► synced HR policy (HR-1)
+                                     get_leave_balance ─► HR system, live, own record only
+```
+
+- **Router:** one model call that picks an agent from those offered to the user (`offered_to_groups` in `policies.yaml`), answering as JSON that is checked. A broken answer, or an agent not offered, means "no assistant". Nina, with no groups, gets no assistant and the model isn't called. The router has no key and no data access, so a wrong choice gives a poorer answer, never a leak.
+- **HR policies are synced** like any other source (`backend/data/sources/hr/`): the leave policy (HR-1) is shared with all staff groups, and the salary bands (HR-2) are HR-only, so nobody in the demo sees them.
+- **Leave balances are live:** `get_leave_balance` takes no input. The MCP service reads the signed-in user's own row from the pretend HR system (`backend/data/live/hr-system.json`) on every call. Edit that file and ask again: the answer changes with no sync. The audit log records the call but not the balance.
+- **Try it:** as Paula, ask _"How many vacation days do I have left?"_ (live balance HRIS-1042 plus the policy), then _"How many vacation days does Sam have left?"_ (it refuses: it can only see your own). Ask _"Should we prioritize dark mode next?"_ and the router picks the roadmap agent instead.
+
+![The router sends the vacation question to the HR agent for each user](docs/images/router-hr.jpg)
+
+From the CLI (skips the router): `AGENT_KEY=dev-agent-hr npm run agent -- --user sam "How many vacation days do I have left?"`
 
 ## Run the 6 demo scenarios
 
@@ -202,7 +227,7 @@ npm run eval                 # retrieval test set (needs npm run sync first)
 npm run eval -- --answers    # also asks the real agent 3 questions (costs a few model calls)
 ```
 
-- **Retrieval** ([`backend/data/eval/retrieval.yaml`](backend/data/eval/retrieval.yaml), 10 cases): for each user and question, the records that should be in the top 5 and the records that must never appear. It is scored with keyword search, and with keyword + meaning search when a key is set. Any permission leak fails the run, whatever the relevance score. Latest run: 9/9 with keywords (1 case needs meaning search), 10/10 with both, recall 100%, 0 leaks.
+- **Retrieval** ([`backend/data/eval/retrieval.yaml`](backend/data/eval/retrieval.yaml), 13 cases, including 3 for HR): for each user and question, the records that should be in the top 5 and the records that must never appear. It is scored with keyword search, and with keyword + meaning search when a key is set. Any permission leak fails the run, whatever the relevance score. Latest run: 12/12 with keywords (1 case needs meaning search), 13/13 with both, recall 100%, 0 leaks.
 - **Answers** ([`backend/data/eval/answers.yaml`](backend/data/eval/answers.yaml), 3 cases): checks evidence, not wording. The answer must cite expected records, mention no hidden ones, and cite nothing a tool didn't return. Latest run: 3/3.
 
 The retrieval set also runs in CI (keyword mode) as part of `npm test`.
@@ -230,22 +255,22 @@ All of them live in `backend/data/policies.yaml`.
 | Eli (Engineer) | engineering | Engineering tickets, the dark mode brief (PRD-7) | Any deal, the feedback digest, the roadmap draft |
 | Nina (New hire) | none yet | Nothing | Everything: a valid login alone gives no access |
 
-Nobody sees ENG-60, because it has no permission info (deny by default).
+Nobody sees ENG-60, because it has no permission info (deny by default). Paula, Sam and Eli can see the leave policy (HR-1) through the HR agent, and each gets only their own leave balance; nobody sees the salary bands (HR-2). Nina has no HR record yet.
 
-| Agent | Can read | Tools |
-|---|---|---|
-| roadmap-agent | Sales, Engineering, Product | search_knowledge, get_feature_context |
-| product-faq-agent | Product | search_knowledge |
+| Agent | Can read | Tools | Router offers it to |
+|---|---|---|---|
+| roadmap-agent | Sales, Engineering, Product | search_knowledge, get_feature_context | product, sales, engineering |
+| hr-agent | HR | search_knowledge, get_leave_balance | product, sales, engineering |
+| product-faq-agent | Product | search_knowledge | nobody (used to test agent scope) |
 
 ### Add a user or an agent
 
 1. Add an entry to `backend/data/policies.yaml`:
    - **User:** `id`, `name`, `token` (any unique string) and `groups`, matched against each record's `allowed_groups`.
-   - **Agent:** `id`, `description`, `api_key` (unique), `allowed_sources` (any of `sales`, `engineering`, `product`) and `allowed_tools` (any of `search_knowledge`, `get_feature_context`). The file is checked on start: duplicate keys or unknown tools stop the service with a clear error.
+   - **Agent:** `id`, `description` (the router reads it to choose), `api_key` (unique), `allowed_sources` (any of `sales`, `engineering`, `product`, `hr`), `allowed_tools` (any of `search_knowledge`, `get_feature_context`, `get_leave_balance`) and `offered_to_groups` (users in these groups may be routed to it; leave it out and the router never picks it). The file is checked on start: duplicate keys or unknown tools stop the service with a clear error.
 2. Restart: `npm run dev` (or `npm run mcp` and `npm run api`).
-3. Nothing else to change. The page reads users and agents from the web API (`/api/users`, `/api/agents`), which reads the same file, so new entries appear in its menus. In the CLI, use `--user <id>` and `AGENT_KEY=<api_key>`.
-
-A new agent gets its own access rules but the same instructions and tool loop as the roadmap agent (`backend/src/agent/roadmap-agent.ts`). An agent that should behave differently (for example an HR helper) needs its own instructions in code.
+3. Nothing else to change for access. The page reads users from the web API (`/api/users`) and the router reads agents from the same file, so new entries are picked up after the restart. In the CLI, use `--user <id>` and `AGENT_KEY=<api_key>`.
+4. **Optional, for an agent that should behave differently:** add its instructions to `backend/src/agent/instructions.ts` (as the HR agent does). Without them it uses the roadmap instructions. Every agent shares the same tool loop (`backend/src/agent/agent-loop.ts`).
 
 ## Project layout
 
@@ -253,7 +278,8 @@ A new agent gets its own access rules but the same instructions and tool loop as
 package.json     workspace root: every command below runs from here
 docker-compose.yml  PostgreSQL + pgvector
 backend/         the knowledge layer (TypeScript, NestJS)
-  data/          mock sources, feature list (features.yaml), agents and users (policies.yaml), eval sets
+  data/          mock sources, feature list (features.yaml), agents and users (policies.yaml), eval sets,
+                 live/ (the pretend HR system, read at question time, never synced)
   db/migrations/ SQL schema
   scripts/       migrate, sync, mcp, agent, eval, demo, check-models
   src/
@@ -263,7 +289,8 @@ backend/         the knowledge layer (TypeScript, NestJS)
     policy/      agents, users, identity, tool grants
     mcp/         MCP service, tools, audit log
     providers/   AI model adapters (OpenRouter through LangChain)
-    agent/       roadmap agent: our own tool loop, MCP client
+    agent/       our own tool loop, per-agent instructions, router, MCP client
+    hr/          the live HR system (mock) behind the HrSystem interface
     api/         web API for the page: lists users and agents, streams agent runs (SSE)
     eval/        scoring for the retrieval and answer test sets
     types/       shared types (types only)
@@ -279,6 +306,7 @@ docs/            design document, AI usage log, saved demo run
 - Sync runs on demand. Production would trigger it from webhooks and schedules, with a nightly full check.
 - Feature linking uses explicit IDs and a fixed list of names; no AI matching.
 - Vector search is exact (no index), which is fine at this size.
+- The router picks one agent per question; no follow-up questions, and no splitting a question across agents. The HR system is a JSON file read on each call; production would call the HR system's API with the user's own token.
 
 ## How this maps to production
 

@@ -5,8 +5,8 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 ## Scope right now
 
 - **Roadmap agent only.** It answers questions like "Should we prioritize dark mode next?" using mocked Sales, Engineering and Product data.
-- **Not now:** HR agent, router, live lookups, real integrations, real login. A small web page is optional step 11 (added 2026-11-05).
-- **HR agent comes later, if time allows.** It would add an HR connector, an agent key and scope in `policies.yaml`, and its own instructions and tool list. An optional live tool, `get_leave_balance`, would ask a pretend HR system as the user. Sync, the database, the permission checks and the MCP service stay unchanged.
+- **Not now:** real integrations, real login. A small web page is step 11 (added 2026-11-05).
+- **Added 2026-11-05 (step 12):** an HR agent with a live lookup, and a router that picks the agent, so the page no longer needs an agent picker. See `DECISIONS.md`, "Router and HR agent".
 
 ## Confirmed stack
 
@@ -49,6 +49,13 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 9. ✅ **Proof (done, 103 tests passing; `npm run eval` and `npm run demo` pass with the real model):** a small evaluation set, one demo script covering all 6 required scenarios (including a prompt that tries to bypass access), the README, and `docs/ai-sdlc.md`, updated as we go.
 10. ✅ **Design document (done, `docs/design.md`):** written after the demo works, covering every section the PDF asks for.
 11. ✅ **Web page (done, 111 tests passing, `npm run dev` works with the real model; added 2026-11-05):** a small web page where you pick a user and ask a question, and the agent's steps (tool calls, results, then the answer) stream in live over SSE (server-sent events). It reuses the step 8 agent loop; the CLI stays the main demo. Plain and functional, not polished.
+12. ✅ **Router and HR agent (done, 129 tests passing, checked in the browser with the real model; added 2026-11-05):** answers "How many vacation days do I have left?" by reading the synced leave policy and fetching the user's own balance live from a pretend HR system.
+    - **HR source:** a fourth synced source, HR policy documents in Markdown (`backend/data/sources/hr/`). The leave policy is shared with all staff groups; a salary bands document is HR-only (nobody in the demo), to show denial again.
+    - **Live lookup:** a new MCP tool, `get_leave_balance`, with no input. The MCP service returns only the signed-in user's own balance, read fresh from a pretend HR system on every call, never stored. Editing the HR data changes the next answer with no sync.
+    - **HR agent:** its own key, scope (`hr` source only) and instructions, using the same agent loop as the roadmap agent.
+    - **Router:** one model call that picks an agent from the ones this user may use (new `offered_to_groups` field), or none. It has no data access; the chosen agent still goes through the MCP service with its own key.
+    - **Page:** the agent picker is removed; each answer shows which agent the router chose and why.
+    - **Tests:** the HR connector, own-balance-only, no balance for unknown users, the roadmap agent can't see HR data or the live tool, the router's choices and its fallback, and the streamed "routed" step. Eval: an HR retrieval case.
 
 ## Rules while building
 

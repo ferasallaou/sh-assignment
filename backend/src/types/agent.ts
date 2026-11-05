@@ -44,3 +44,10 @@ export interface AgentLimits {
   /** Tool calls across the whole run. */
   maxToolCalls: number;
 }
+
+/** The router's choice for one question: which agent should answer it, and why. */
+export interface RouteDecision {
+  /** null: no offered agent fits, or none is offered to this user. */
+  agentId: string | null;
+  reason: string;
+}

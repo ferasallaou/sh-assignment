@@ -10,7 +10,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { Pool } from 'pg';
 import { McpToolClient } from '../src/agent/mcp-tool-client';
-import { RoadmapAgent } from '../src/agent/roadmap-agent';
+import { AgentLoop } from '../src/agent/agent-loop';
 import { AppModule } from '../src/app.module';
 import { loadConfig } from '../src/config';
 import { DB_POOL } from '../src/database/database.module';
@@ -78,7 +78,7 @@ async function main(): Promise<void> {
           if (!user) throw new Error(`${c.id}: unknown user ${c.user}`);
           const tools = await McpToolClient.connect(url, loadConfig().AGENT_KEY, user.token);
           try {
-            const run = await new RoadmapAgent(llm, tools).ask(c.question);
+            const run = await new AgentLoop(llm, tools).ask(c.question);
             results.push(scoreAnswer(c, run));
           } finally {
             await tools.close();

@@ -8,6 +8,7 @@
 export type * from './access';
 export type * from './agent';
 export type * from './api';
+export type * from './hr';
 export type * from './knowledge';
 export type * from './models';
 export type * from './sources';

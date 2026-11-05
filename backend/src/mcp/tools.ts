@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
-import type { Feature, ToolName, VerifiedCaller } from '../types';
+import type { Feature, HrSystem, ToolName, VerifiedCaller } from '../types';
 
 /**
  * The tools the MCP service offers.
@@ -22,6 +22,9 @@ const featureInput = z
   })
   .strict();
 
+// No fields at all: the balance is always the signed-in user's own, so there is nothing to ask for.
+const leaveInput = z.object({}).strict();
+
 export interface ToolDefinition {
   name: ToolName;
   description: string;
@@ -30,7 +33,7 @@ export interface ToolDefinition {
   run(caller: VerifiedCaller, args: unknown): Promise<{ output: unknown; resultCount: number }>;
 }
 
-export function buildTools(search: KnowledgeSearchService, catalog: Feature[]): ToolDefinition[] {
+export function buildTools(search: KnowledgeSearchService, catalog: Feature[], hr: HrSystem): ToolDefinition[] {
   const featureList = catalog.map((f) => `${f.key} (${f.name})`).join(', ');
   return [
     {
@@ -55,6 +58,31 @@ export function buildTools(search: KnowledgeSearchService, catalog: Feature[]): 
         const { feature } = featureInput.parse(args);
         const records = await search.getFeatureContext(caller, feature);
         return { output: { feature, records }, resultCount: records.length };
+      },
+    },
+    {
+      name: 'get_leave_balance',
+      description:
+        "Returns the current user's own leave balance for this year (days left, taken, booked, carried over), " +
+        'fetched live from the HR system. Takes no input: it can only return the balance of the user you act ' +
+        'for, never anyone else.',
+      inputSchema: toInputSchema(leaveInput),
+      async run(caller, args) {
+        leaveInput.parse(args);
+        // The user comes from the verified caller, never from the model.
+        const balance = await hr.getLeaveBalance(caller.user.id);
+        if (!balance)
+          return { output: { records: [], message: 'The HR system has no record for you.' }, resultCount: 0 };
+        // Shaped like the other tools' records, so the agent can cite it and the page can show it.
+        const record = {
+          externalId: `HRIS-${balance.employeeNumber}`,
+          source: 'hr-system (live)',
+          title: `Leave balance ${balance.year}: ${caller.user.name}`,
+          sourceUpdatedAt: balance.updatedAt,
+          fetchedAt: new Date().toISOString(),
+          ...balance,
+        };
+        return { output: { records: [record] }, resultCount: 1 };
       },
     },
   ];

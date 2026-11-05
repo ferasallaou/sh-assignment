@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Pool } from 'pg';
 import { McpToolClient } from '../src/agent/mcp-tool-client';
-import { RoadmapAgent } from '../src/agent/roadmap-agent';
+import { AgentLoop } from '../src/agent/agent-loop';
 import { loadConfig } from '../src/config';
 import { EngineeringJsonConnector } from '../src/connectors/engineering-json.connector';
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
@@ -123,7 +123,7 @@ async function main(): Promise<void> {
     const client = await connect(userId);
     const received = new Set<string>();
     try {
-      const run = await new RoadmapAgent(llm, client, undefined, (event) => {
+      const run = await new AgentLoop(llm, client, undefined, (event) => {
         if (event.type === 'tool_call') console.log(`     → ${event.name} ${JSON.stringify(event.args)}`);
         if (event.type === 'tool_result') {
           event.recordIds.forEach((id) => received.add(id));

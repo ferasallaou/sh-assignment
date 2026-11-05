@@ -4,6 +4,7 @@
  */
 import { Pool } from 'pg';
 import { EngineeringJsonConnector } from '../src/connectors/engineering-json.connector';
+import { HrMarkdownConnector } from '../src/connectors/hr-markdown.connector';
 import { ProductMarkdownConnector } from '../src/connectors/product-markdown.connector';
 import { SalesCsvConnector } from '../src/connectors/sales-csv.connector';
 import { loadAnswerCases, scoreAnswer } from '../src/eval/answer-eval';
@@ -20,7 +21,12 @@ beforeAll(async () => {
   await pool.query('TRUNCATE records, entities, sync_state, audit_log RESTART IDENTITY CASCADE');
   await new SyncService(
     pool,
-    [new SalesCsvConnector(), new EngineeringJsonConnector(), new ProductMarkdownConnector()],
+    [
+      new SalesCsvConnector(),
+      new EngineeringJsonConnector(),
+      new ProductMarkdownConnector(),
+      new HrMarkdownConnector(),
+    ],
     loadFeatureCatalog(),
     null,
   ).syncAll();

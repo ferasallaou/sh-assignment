@@ -4,11 +4,11 @@ import { parse } from 'yaml';
 import { z } from 'zod';
 
 /** The tools the MCP service offers. Agents may only be granted tools from this list. */
-export const TOOL_NAMES = ['search_knowledge', 'get_feature_context'] as const;
+export const TOOL_NAMES = ['search_knowledge', 'get_feature_context', 'get_leave_balance'] as const;
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 /** The sources the knowledge base syncs. Agents may only be scoped to these. */
-export const SOURCE_NAMES = ['sales', 'engineering', 'product'] as const;
+export const SOURCE_NAMES = ['sales', 'engineering', 'product', 'hr'] as const;
 export type SourceName = (typeof SOURCE_NAMES)[number];
 
 const agentSchema = z.object({
@@ -17,6 +17,8 @@ const agentSchema = z.object({
   api_key: z.string().min(1),
   allowed_sources: z.array(z.enum(SOURCE_NAMES)),
   allowed_tools: z.array(z.enum(TOOL_NAMES)),
+  // Users in any of these groups may be sent to this agent by the router. Empty: never offered.
+  offered_to_groups: z.array(z.string().min(1)).default([]),
 });
 
 const userSchema = z.object({

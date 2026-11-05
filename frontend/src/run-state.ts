@@ -1,4 +1,4 @@
-import type { AgentRun, AskStreamEvent } from './api-types';
+import type { AgentRun, AskStreamEvent, RouteDecision } from './api-types';
 
 /** One tool call as shown on the page: what was asked, and what came back. */
 export interface StepView {
@@ -10,6 +10,8 @@ export interface StepView {
 
 export interface RunState {
   status: 'running' | 'done' | 'error';
+  /** Which agent the router chose, once it has decided. */
+  route?: RouteDecision;
   steps: StepView[];
   limitReached?: 'steps' | 'tool_calls';
   run?: AgentRun;
@@ -22,6 +24,7 @@ export const initialRunState: RunState = { status: 'running', steps: [] };
 export function applyEvent(state: RunState, event: AskStreamEvent): RunState {
   if (event.type === 'done') return { ...state, status: 'done', run: event.run };
   if (event.type === 'error') return { ...state, status: 'error', error: event.message };
+  if (event.type === 'routed') return { ...state, route: { agentId: event.agentId, reason: event.reason } };
 
   const step = event.event;
   switch (step.type) {

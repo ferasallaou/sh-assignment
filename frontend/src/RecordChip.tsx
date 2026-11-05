@@ -7,9 +7,11 @@ export function RecordChip({ id, muted = false, title }: { id: string; muted?: b
   );
 }
 
-export function sourceOf(id: string): 'sales' | 'engineering' | 'product' | 'other' {
+export function sourceOf(id: string): 'sales' | 'engineering' | 'product' | 'hr' | 'live' | 'other' {
   if (id.startsWith('S-')) return 'sales';
   if (id.startsWith('ENG-')) return 'engineering';
   if (id.startsWith('PRD-')) return 'product';
+  if (id.startsWith('HRIS-')) return 'live';
+  if (id.startsWith('HR-')) return 'hr';
   return 'other';
 }

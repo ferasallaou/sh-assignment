@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, Server as HttpServer, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 // The low-level MCP server is used on purpose: we need to list a different set of tools per
 // caller and to audit calls to tools the caller wasn't given. The high-level McpServer
 // rejects unknown tools before our code runs, so those attempts would go unrecorded.
@@ -12,7 +12,9 @@ import { FEATURE_CATALOG } from '../knowledge/knowledge.module';
 import { KnowledgeSearchService } from '../knowledge/knowledge-search.service';
 import { canUseTool, resolveCaller } from '../policy/identity';
 import { POLICY_CONFIG } from '../policy/policy.module';
-import type { Feature, PolicyConfig, VerifiedCaller } from '../types';
+import { HR_SYSTEM } from '../hr/hr.module';
+import { MockHrSystem } from '../hr/mock-hr-system';
+import type { Feature, HrSystem, PolicyConfig, VerifiedCaller } from '../types';
 import { AuditService } from './audit.service';
 import { buildTools, ToolDefinition } from './tools';
 
@@ -43,8 +45,10 @@ export class McpService {
     // the type metadata Nest would otherwise use to find class dependencies.
     @Inject(KnowledgeSearchService) search: KnowledgeSearchService,
     @Inject(AuditService) private readonly audit: AuditService,
+    // The live HR system. Optional so tests can build the service without it (they get the mock).
+    @Optional() @Inject(HR_SYSTEM) hr: HrSystem = new MockHrSystem(),
   ) {
-    this.tools = buildTools(search, catalog);
+    this.tools = buildTools(search, catalog, hr);
   }
 
   /** Starts the HTTP server. Port 0 picks a free port (used by tests). Returns the URL. */
