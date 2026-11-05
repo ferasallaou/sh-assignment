@@ -8,6 +8,7 @@ import { z } from 'zod';
  */
 const configSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://knowledge:knowledge@localhost:5433/knowledge'),
+  MCP_PORT: z.coerce.number().int().min(0).max(65535).default(3100),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
