@@ -216,4 +216,19 @@ describe('failing safely', () => {
     expect(second.chunksEmbedded).toBe(first.chunksWaitingForEmbedding);
     expect(second.chunksWaitingForEmbedding).toBe(0);
   });
+
+  it('re-embeds everything when the embedding model changes, and records which model made each vector', async () => {
+    const first = await syncService(fakeEmbedder).syncAll();
+    const otherModel: EmbeddingProvider = { name: 'other-model', embed: async (texts) => texts.map(() => [1, 2]) };
+
+    const second = await syncService(otherModel).syncAll();
+    expect(second.chunksEmbedded).toBe(first.chunksEmbedded);
+    expect(second.chunksWaitingForEmbedding).toBe(0);
+
+    const { rows } = await pool.query('SELECT DISTINCT embedding_model, vector_dims(embedding) AS dims FROM chunks');
+    expect(rows).toEqual([{ embedding_model: 'other-model', dims: 2 }]);
+
+    const third = await syncService(otherModel).syncAll();
+    expect(third.chunksEmbedded).toBe(0);
+  });
 });

@@ -230,7 +230,8 @@ describe('started with npm run mcp', () => {
     const root = join(__dirname, '..');
     const child = spawn(join(root, 'node_modules', '.bin', 'tsx'), ['scripts/mcp.ts'], {
       cwd: root,
-      env: { ...process.env, MCP_PORT: '0' },
+      // No model key: this test must not call OpenRouter (and CI has no key anyway).
+      env: { ...process.env, MCP_PORT: '0', OPENROUTER_API_KEY: '' },
     });
     try {
       const startedUrl = await new Promise<string>((resolve, reject) => {
