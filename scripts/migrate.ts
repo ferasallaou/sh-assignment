@@ -6,7 +6,7 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import { loadConfig } from '../src/config';
 
 const MIGRATIONS_DIR = join(__dirname, '..', 'db', 'migrations');
@@ -46,6 +46,35 @@ export async function migrate(pool: Pool): Promise<string[]> {
     }
   }
   return appliedNow;
+}
+
+/**
+ * Creates the database in `url` if it doesn't exist yet, then applies migrations.
+ * Used for the separate test and demo databases, so they never touch the main demo data.
+ */
+export async function ensureDatabase(url: string): Promise<void> {
+  const target = new URL(url);
+  const databaseName = target.pathname.slice(1);
+  const adminUrl = new URL(target);
+  adminUrl.pathname = '/postgres';
+
+  const admin = new Client({ connectionString: adminUrl.toString() });
+  await admin.connect();
+  try {
+    const exists = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [databaseName]);
+    if (exists.rowCount === 0) {
+      await admin.query(`CREATE DATABASE "${databaseName.replace(/"/g, '""')}"`);
+    }
+  } finally {
+    await admin.end();
+  }
+
+  const pool = new Pool({ connectionString: target.toString() });
+  try {
+    await migrate(pool);
+  } finally {
+    await pool.end();
+  }
 }
 
 async function main(): Promise<void> {

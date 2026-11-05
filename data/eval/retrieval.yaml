@@ -1,0 +1,79 @@
+# Small retrieval test set: does search find the right records for a question,
+# and does it never return what this caller may not see?
+#
+# Each case:
+#   agent, user   who is asking (from policies.yaml)
+#   query         the question
+#   expect        record IDs that should be in the top `k` results (default 5)
+#   forbid        record IDs that must never appear (a permission leak if they do)
+#   needs_meaning true if only meaning search (embeddings) can find it: no shared keywords
+#
+# Run: npm run eval   (keyword search always; keyword + meaning when OPENROUTER_API_KEY is set)
+
+cases:
+  - id: dark-mode-decision
+    agent: roadmap-agent
+    user: paula
+    query: Should we prioritize dark mode next?
+    expect: [PRD-7, ENG-42]
+    forbid: [S-103, ENG-60]
+
+  - id: charts-risk
+    agent: roadmap-agent
+    user: paula
+    query: Can the charts library render a dark theme?
+    expect: [ENG-43]
+    forbid: [S-103]
+
+  - id: csv-export
+    agent: roadmap-agent
+    user: paula
+    query: CSV export of campaign results
+    expect: [ENG-51, S-104]
+
+  - id: okta-login
+    agent: roadmap-agent
+    user: paula
+    query: Okta login for store staff
+    expect: [S-105]
+    forbid: [ENG-60]
+
+  - id: night-shift-complaint
+    agent: roadmap-agent
+    user: paula
+    query: screens too bright for staff on night shifts
+    expect: [PRD-7, S-101]
+
+  - id: identity-provider-meaning
+    agent: roadmap-agent
+    user: paula
+    query: enterprise identity provider sign-in
+    expect: [S-105]
+    forbid: [ENG-60]
+    needs_meaning: true
+
+  - id: at-risk-renewal-sales
+    agent: roadmap-agent
+    user: sam
+    query: renewal at risk unless dark mode ships
+    expect: [S-103]
+    forbid: [ENG-42, ENG-43, PRD-9]
+
+  - id: saml-never-shown
+    agent: roadmap-agent
+    user: sam
+    query: SAML login support for enterprise customers
+    forbid: [ENG-60]
+
+  - id: confidential-deal-hidden-from-product
+    agent: roadmap-agent
+    user: paula
+    query: Lidl confidential renewal discount
+    forbid: [S-103]
+
+  - id: faq-agent-product-only
+    agent: product-faq-agent
+    user: sam
+    query: dark mode demand from customers
+    expect: [PRD-7]
+    forbid: [S-101, S-102, S-103, ENG-42, ENG-43]

@@ -55,8 +55,10 @@ export class KnowledgeSearchService {
          WHERE ${ACCESS_FILTER}
        ),
        -- Questions are natural language, so match ANY of the words (OR), not all of them.
+       -- plainto_tsquery already reduced the words to their root forms; casting with ::tsquery
+       -- keeps them as they are (to_tsquery would shorten them again: "enterpris" → "enterpri").
        q AS (
-         SELECT to_tsquery('english', replace(plainto_tsquery('english', $3)::text, '&', '|')) AS terms
+         SELECT replace(plainto_tsquery('english', $3)::text, '&', '|')::tsquery AS terms
        ),
        keyword AS (
          SELECT a.id, row_number() OVER (ORDER BY ts_rank_cd(a.tsv, q.terms) DESC, a.id) AS rank

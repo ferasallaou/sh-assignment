@@ -118,6 +118,13 @@ describe('search (keyword only, no embedding provider)', () => {
     expect(ids(response.results)).toEqual(expect.arrayContaining(['ENG-42', 'PRD-7', 'S-101']));
   });
 
+  it('matches words whose root form would change if shortened twice (e.g. "enterprise")', async () => {
+    // Regression: the OR query was built by re-parsing already-stemmed words, so "enterpris"
+    // became "enterpri" and never matched. Found by the retrieval eval.
+    const response = await service().search(paula, 'enterprise', 10);
+    expect(ids(response.results)).toContain('PRD-9');
+  });
+
   it('puts the most relevant record first', async () => {
     const response = await service().search(paula, 'charts library dark theme spike');
     expect(response.results[0].externalId).toBe('ENG-43');

@@ -17,7 +17,9 @@
     "test": "jest --runInBand",
     "mcp": "tsx scripts/mcp.ts",
     "models:check": "tsx scripts/check-models.ts",
-    "agent": "tsx scripts/agent.ts"
+    "agent": "tsx scripts/agent.ts",
+    "eval": "tsx scripts/eval.ts",
+    "demo": "tsx scripts/demo.ts"
   },
   "engines": {
     "node": ">=20"
