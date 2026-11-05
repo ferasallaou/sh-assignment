@@ -34,7 +34,7 @@ Saved on 2026-11-04. **This file wins over `PLAN.md` where they disagree.** `PLA
 - **OpenRouter** for chat and embeddings (the user has a key).
 - **LangChain** is used only as the model adapter, behind `LlmProvider` and `EmbeddingProvider`. The model picks tools through LangChain tool binding, but the **agent loop is our own code**, and every tool call goes through the MCP service.
 - **MCP over HTTP**. Mock agent and user keys go in each request, and the service resolves identity.
-- **Demo scope:** the roadmap agent CLI only. No router or UI. The HR agent and its live `get_leave_balance` tool come later, if time allows.
+- **Demo scope:** the roadmap agent CLI only. No router. A small web page that streams the agent's steps over SSE was added on 2026-11-05 as **optional step 11**, only after the core proof (steps 7–9) is done, so the time budget goes to the knowledge layer first. The HR agent and its live `get_leave_balance` tool come later, if time allows.
 
 ## The user's design outline (latest version, pasted 2026-11-04)
 

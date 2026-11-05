@@ -12,6 +12,7 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 - Used web search through the assistant to check how others build "context layers" for agents and which products exist (Glean, Onyx, Microsoft Copilot, n8n), to prepare the buy-vs-build section.
 - The human pushed back several times: when the assistant mixed up "build a chatbot" with "build the knowledge layer", when it rushed to tool names before the big picture was agreed, and when it then over-asked about low-stakes details. The human also wrote their own design outline, which the assistant reviewed for gaps.
 - Decisions were saved in `DECISIONS.md`, `PLAN.md` and `CLAUDE.md`, and updated whenever something changed, to avoid drift between sessions.
+- After step 6, the human proposed adding a small UI with SSE. The assistant agreed it would make the demo easier to follow, and suggested making it an optional last step after the core proof, to protect the time budget. Plan, decisions and `CLAUDE.md` were updated.
 
 ## Implementation
 
@@ -44,3 +45,4 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 ## Review
 
 - **CI and lint:** the assistant added ESLint, Prettier and a GitHub Actions workflow (checks job, and a tests job with a pgvector Postgres service). It ran everything locally first. ESLint found 1 real issue (a re-thrown migration error that lost its original cause), which was fixed. Prettier reformatted 11 code and config files. Markdown docs were deliberately excluded from formatting. It also checked the CI steps in a clean copy (fresh `npm ci`, no `.env`): checks and all 48 tests passed.
+- **README:** written after step 6, at the human's request, covering setup, environment variables, sync, the MCP service, tests and limitations. The assistant ran every command in it on the demo database, including the multi-line example copied straight from the README, before opening the PR.
