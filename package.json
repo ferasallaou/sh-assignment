@@ -4,7 +4,8 @@
   "private": true,
   "description": "PoC of a permission-aware company knowledge layer for AI agents (ShopFully & Flipp take-home).",
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
     "db:up": "docker compose up -d --wait",
@@ -16,21 +17,27 @@
     "eval": "npm run eval -w backend --",
     "demo": "npm run demo -w backend --",
     "models:check": "npm run models:check -w backend --",
-    "build": "npm run build -w backend --",
-    "typecheck": "npm run typecheck -w backend --",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test -w backend --",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run format:check && npm run typecheck"
+    "check": "npm run lint && npm run format:check && npm run typecheck",
+    "web": "npm run dev -w frontend",
+    "api": "npm run api -w backend --",
+    "dev": "concurrently -n mcp,api,web -c blue,magenta,green \"npm run mcp\" \"npm run api\" \"npm run web\""
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "typescript-eslint": "^8.72.1"
   }

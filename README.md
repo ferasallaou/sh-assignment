@@ -17,7 +17,7 @@ The demo question is: _"Should we prioritize dark mode next?"_
 | 8 | Roadmap agent you can ask questions | ✅ Done |
 | 9 | Evaluation set, demo script for the 6 scenarios | ✅ Done |
 | 10 | Design document ([`docs/design.md`](docs/design.md)) | ✅ Done |
-| 11 | Optional: small web page showing the agent's steps live | Next, if time allows |
+| 11 | Small web page showing the agent's steps live | ✅ Done |
 
 ## What the PoC proves
 
@@ -162,6 +162,22 @@ What to look for (from a real run):
 
 `--user` picks a user from `policies.yaml` (a demo shortcut; in production the token comes from the user's login). Set `AGENT_KEY=dev-agent-product-faq` to ask through the narrower agent.
 
+## Run the web page
+
+Needs `OPENROUTER_API_KEY` in `backend/.env`. One command starts the MCP service, the web API and the page:
+
+```bash
+npm run dev
+```
+
+Then open http://localhost:5173. Pick who you are (Paula, Sam, or **Compare both** to run the same question as each side by side), pick the agent, and ask. Each tool call appears as it happens with the record IDs it returned (coloured by department), then the answer with its cited sources.
+
+![The web page comparing Paula and Sam](docs/images/web-page.jpg)
+
+How it works: the page calls a small web API (`backend/src/api/`, port `API_PORT`, default 3200), which runs the same roadmap agent as the CLI and streams each step to the browser with server-sent events. The agent still reaches the knowledge base only through the MCP service, with the chosen user's token, so the page gets exactly the same permission checks. Choosing the user on the page is a demo shortcut; in production it comes from the company login. The page never receives user tokens or agent keys. If the browser leaves mid-answer, the agent stops at its next step.
+
+To run the parts on their own: `npm run mcp`, `npm run api` and `npm run web`.
+
 ## Run the 6 demo scenarios
 
 ```bash
@@ -220,10 +236,11 @@ backend/         the knowledge layer (TypeScript, NestJS)
     mcp/         MCP service, tools, audit log
     providers/   AI model adapters (OpenRouter through LangChain)
     agent/       roadmap agent: our own tool loop, MCP client
+    api/         web API for the page: lists users and agents, streams agent runs (SSE)
     eval/        scoring for the retrieval and answer test sets
     types/       shared types (types only)
   tests/
-frontend/        web page that streams the agent's steps live (next PR)
+frontend/        web page (React + Vite) that streams the agent's steps live
 docs/            design document, AI usage log, saved demo run
 ```
 

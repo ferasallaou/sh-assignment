@@ -1,0 +1,25 @@
+// The web API's contract. The frontend imports these types directly (type-only), so this file
+// must only depend on other plain type files (agent.ts, models.ts), never on Node or library code.
+import type { AgentEvent, AgentRun } from './agent';
+
+/** A user the demo page can act as. Tokens never leave the server. */
+export interface DemoUser {
+  id: string;
+  name: string;
+  groups: string[];
+}
+
+/** An agent the demo page can ask through. Agent keys never leave the server. */
+export interface DemoAgent {
+  id: string;
+  description: string;
+  allowedSources: string[];
+  allowedTools: string[];
+}
+
+/**
+ * One server-sent event from GET /api/ask. `type` is also the SSE event name.
+ * The stream is: zero or more agent steps, then exactly one `done` or `error`.
+ */
+export type AskStreamEvent =
+  { type: 'step'; event: AgentEvent } | { type: 'done'; run: AgentRun } | { type: 'error'; message: string };
