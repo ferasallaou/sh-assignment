@@ -56,6 +56,11 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
     - **Router:** one model call that picks an agent from the ones this user may use (new `offered_to_groups` field), or none. It has no data access; the chosen agent still goes through the MCP service with its own key.
     - **Page:** the agent picker is removed; each answer shows which agent the router chose and why.
     - **Tests:** the HR connector, own-balance-only, no balance for unknown users, the roadmap agent can't see HR data or the live tool, the router's choices and its fallback, and the streamed "routed" step. Eval: an HR retrieval case.
+13. ✅ **HR web service and salaries (done, 137 tests passing, checked in the browser with the real model; added 2026-11-05):** answers "What is my salary?" and refuses "What is Paula's salary?" for an engineer, with the refusal made by the MCP service, not the model.
+    - **HR web service:** the pretend HR system becomes its own small HTTP service (`npm run hr-api`, port `HR_API_PORT`, default 3300), started by `npm run dev`. The MCP service calls it over HTTP with a service key, like a real external API. Nothing from it is stored.
+    - **Salary tool:** `get_salary`, with an optional colleague name. The MCP service decides: your own pay is always allowed; anyone else's only if you are in the `hr` group. A refusal gives the same message whether the colleague exists or not, and is logged as refused.
+    - **New user:** Hana (HR), group `hr`, who may see everyone's pay and the HR-only salary bands.
+    - **Tests:** the HR service's key check and live reads; own salary; an engineer refused for a colleague (audited); an unknown name refused the same way; HR allowed; the roadmap agent can't call it.
 
 ## Rules while building
 

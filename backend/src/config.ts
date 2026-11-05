@@ -11,6 +11,10 @@ const configSchema = z.object({
   MCP_PORT: z.coerce.number().int().min(0).max(65535).default(3100),
   // The web API that streams agent runs to the frontend (npm run api).
   API_PORT: z.coerce.number().int().min(0).max(65535).default(3200),
+  // The pretend HR system's web service (npm run hr-api), called live by the MCP service.
+  HR_API_PORT: z.coerce.number().int().min(0).max(65535).default(3300),
+  HR_API_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  HR_SERVICE_KEY: z.preprocess(emptyToUndefined, z.string().min(1).default('dev-hr-service-key')),
   // The agent CLI: which agent key it uses and where the MCP service is (default: localhost on MCP_PORT).
   AGENT_KEY: z.preprocess(emptyToUndefined, z.string().min(1).default('dev-agent-roadmap')),
   MCP_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
