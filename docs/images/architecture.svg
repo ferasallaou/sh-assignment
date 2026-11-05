@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 820" width="1080" height="820" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+    <marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f8a5b"/></marker>
+    <marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9822b"/></marker>
+    <marker id="grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8c959f"/></marker>
+    <style>
+      .band-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+      .t { font-size: 14px; font-weight: 600; fill: #1f2328; }
+      .s { font-size: 12px; fill: #57606a; }
+      .box { fill: #ffffff; stroke-width: 1.5; }
+      .edge-label { font-size: 12px; fill: #57606a; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="820" fill="#ffffff"/>
+
+  <!-- People -->
+  <rect class="box" x="230" y="20" width="340" height="52" rx="10" stroke="#8c959f"/>
+  <text class="t" x="400" y="42" text-anchor="middle">Employees</text>
+  <text class="s" x="400" y="60" text-anchor="middle">company chat · Slack · workflows</text>
+  <line x1="400" y1="72" x2="400" y2="104" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+
+  <!-- Agents -->
+  <rect x="20" y="108" width="780" height="98" rx="14" fill="#eef4ff" stroke="#2f6fde" stroke-width="1.5"/>
+  <text class="band-label" x="38" y="130" fill="#2f6fde">AGENTS · built by any team</text>
+  <rect class="box" x="40" y="142" width="130" height="50" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="105" y="163" text-anchor="middle">Router</text>
+  <text class="s" x="105" y="180" text-anchor="middle">picks the agent</text>
+  <line x1="170" y1="167" x2="204" y2="167" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <rect class="box" x="210" y="142" width="130" height="50" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="275" y="172" text-anchor="middle">HR</text>
+  <rect class="box" x="355" y="142" width="130" height="50" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="420" y="172" text-anchor="middle">Roadmap</text>
+  <rect class="box" x="500" y="142" width="130" height="50" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="565" y="172" text-anchor="middle">Product FAQ</text>
+  <rect class="box" x="645" y="142" width="135" height="50" rx="10" stroke="#2f6fde" stroke-dasharray="5 4"/>
+  <text class="t" x="712" y="172" text-anchor="middle">Future agents</text>
+
+  <line x1="400" y1="206" x2="400" y2="244" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <text class="edge-label" x="412" y="230">MCP · agent credential + user token</text>
+
+  <!-- Gateway -->
+  <rect x="20" y="248" width="780" height="112" rx="14" fill="#eef4ff" stroke="#2f6fde" stroke-width="1.5"/>
+  <text class="band-label" x="38" y="270" fill="#2f6fde">KNOWLEDGE GATEWAY · MCP + REST · the only way in</text>
+  <rect class="box" x="40" y="284" width="170" height="58" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="125" y="308" text-anchor="middle">1. Who is asking</text>
+  <text class="s" x="125" y="326" text-anchor="middle">verify agent and user</text>
+  <line x1="210" y1="313" x2="226" y2="313" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <rect class="box" x="230" y="284" width="170" height="58" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="315" y="308" text-anchor="middle">2. Are they allowed</text>
+  <text class="s" x="315" y="326" text-anchor="middle">agent scope AND user access</text>
+  <line x1="400" y1="313" x2="416" y2="313" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <rect class="box" x="420" y="284" width="170" height="58" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="505" y="308" text-anchor="middle">3. Find knowledge</text>
+  <text class="s" x="505" y="326" text-anchor="middle">only what they may see</text>
+  <line x1="590" y1="313" x2="606" y2="313" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <rect class="box" x="610" y="284" width="170" height="58" rx="10" stroke="#2f6fde"/>
+  <text class="t" x="695" y="308" text-anchor="middle">4. Answer</text>
+  <text class="s" x="695" y="326" text-anchor="middle">with sources and dates</text>
+
+  <!-- Gateway to store and live -->
+  <line x1="300" y1="360" x2="300" y2="406" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <text class="edge-label" x="190" y="388">search and look up</text>
+  <line x1="525" y1="360" x2="525" y2="406" stroke="#2f6fde" stroke-width="2" marker-end="url(#blue)"/>
+  <text class="edge-label" x="533" y="388">log every call</text>
+  <line x1="715" y1="360" x2="715" y2="406" stroke="#d9822b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#orange)"/>
+
+  <!-- Store -->
+  <rect x="20" y="410" width="600" height="110" rx="14" fill="#f5f2ff" stroke="#6b4fd8" stroke-width="1.5"/>
+  <text class="band-label" x="38" y="432" fill="#6b4fd8">KNOWLEDGE STORE · one per data region</text>
+  <rect class="box" x="40" y="444" width="300" height="60" rx="10" stroke="#6b4fd8"/>
+  <text class="t" x="190" y="468" text-anchor="middle">PostgreSQL + pgvector</text>
+  <text class="s" x="190" y="486" text-anchor="middle">records · chunks · entities · links · permissions</text>
+  <rect class="box" x="355" y="444" width="130" height="60" rx="10" stroke="#6b4fd8"/>
+  <text class="t" x="420" y="468" text-anchor="middle">File storage</text>
+  <text class="s" x="420" y="486" text-anchor="middle">raw and parsed</text>
+  <rect class="box" x="500" y="444" width="100" height="60" rx="10" stroke="#6b4fd8"/>
+  <text class="t" x="550" y="468" text-anchor="middle">Audit log</text>
+  <text class="s" x="550" y="486" text-anchor="middle">every call</text>
+
+  <!-- Live -->
+  <rect class="box" x="640" y="410" width="160" height="110" rx="14" stroke="#d9822b" stroke-dasharray="6 4" fill="#fff8f0"/>
+  <text class="band-label" x="720" y="434" text-anchor="middle" fill="#d9822b">LIVE LOOKUPS</text>
+  <text class="t" x="720" y="460" text-anchor="middle">Salary, leave</text>
+  <text class="s" x="720" y="480" text-anchor="middle">fetched as the user</text>
+  <text class="s" x="720" y="497" text-anchor="middle">at question time,</text>
+  <text class="s" x="720" y="514" text-anchor="middle">never stored</text>
+  <line x1="720" y1="520" x2="720" y2="700" stroke="#d9822b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#orange)"/>
+
+  <!-- Write path -->
+  <rect x="20" y="560" width="600" height="112" rx="14" fill="#ecf8f1" stroke="#1f8a5b" stroke-width="1.5"/>
+  <text class="band-label" x="38" y="582" fill="#1f8a5b">SYNC AND PROCESSING · keeps the store up to date</text>
+  <rect class="box" x="40" y="596" width="160" height="60" rx="10" stroke="#1f8a5b"/>
+  <text class="t" x="120" y="620" text-anchor="middle">Connectors</text>
+  <text class="s" x="120" y="638" text-anchor="middle">events · polls · nightly check</text>
+  <line x1="200" y1="626" x2="216" y2="626" stroke="#1f8a5b" stroke-width="2" marker-end="url(#green)"/>
+  <rect class="box" x="220" y="596" width="130" height="60" rx="10" stroke="#1f8a5b"/>
+  <text class="t" x="285" y="620" text-anchor="middle">Change queue</text>
+  <text class="s" x="285" y="638" text-anchor="middle">in order per record</text>
+  <line x1="350" y1="626" x2="366" y2="626" stroke="#1f8a5b" stroke-width="2" marker-end="url(#green)"/>
+  <rect class="box" x="370" y="596" width="230" height="60" rx="10" stroke="#1f8a5b"/>
+  <text class="t" x="485" y="618" text-anchor="middle">Processing</text>
+  <text class="s" x="485" y="634" text-anchor="middle">check · map permissions · split</text>
+  <text class="s" x="485" y="649" text-anchor="middle">link · embed (bad items set aside)</text>
+  <polyline points="430,596 430,540 190,540 190,508" fill="none" stroke="#1f8a5b" stroke-width="2" marker-end="url(#green)"/>
+  <text class="edge-label" x="200" y="554">save: one change, one transaction</text>
+
+  <!-- Sources -->
+  <line x1="120" y1="700" x2="120" y2="660" stroke="#1f8a5b" stroke-width="2" marker-end="url(#green)"/>
+  <rect x="20" y="704" width="780" height="90" rx="14" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text class="band-label" x="38" y="726" fill="#57606a">DEPARTMENT SOURCES · each owned by its department</text>
+  <g>
+    <rect class="box" x="36" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="95" y="757" text-anchor="middle">Sales</text>
+    <text class="s" x="95" y="773" text-anchor="middle">Salesforce</text>
+    <rect class="box" x="163" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="222" y="757" text-anchor="middle">Engineering</text>
+    <text class="s" x="222" y="773" text-anchor="middle">Jira · GitHub</text>
+    <rect class="box" x="290" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="349" y="757" text-anchor="middle">Product</text>
+    <text class="s" x="349" y="773" text-anchor="middle">Notion · Confluence</text>
+    <rect class="box" x="417" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="476" y="757" text-anchor="middle">Documents</text>
+    <text class="s" x="476" y="773" text-anchor="middle">Drive · SharePoint</text>
+    <rect class="box" x="544" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="603" y="757" text-anchor="middle">Finance</text>
+    <text class="s" x="603" y="773" text-anchor="middle">NetSuite</text>
+    <rect class="box" x="671" y="738" width="118" height="44" rx="8" stroke="#8c959f"/>
+    <text class="t" x="730" y="757" text-anchor="middle">People (HR)</text>
+    <text class="s" x="730" y="773" text-anchor="middle">Workday</text>
+  </g>
+
+  <!-- Side services -->
+  <text class="band-label" x="945" y="232" text-anchor="middle" fill="#57606a">SHARED SERVICES</text>
+  <rect class="box" x="840" y="248" width="210" height="70" rx="10" stroke="#8c959f"/>
+  <text class="t" x="945" y="275" text-anchor="middle">Company login</text>
+  <text class="s" x="945" y="294" text-anchor="middle">people and their groups (SSO)</text>
+  <line x1="840" y1="290" x2="804" y2="290" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#grey)"/>
+
+  <rect class="box" x="840" y="410" width="210" height="80" rx="10" stroke="#8c959f"/>
+  <text class="t" x="945" y="436" text-anchor="middle">Control plane</text>
+  <text class="s" x="945" y="455" text-anchor="middle">which sources and agents exist,</text>
+  <text class="s" x="945" y="472" text-anchor="middle">data contracts, access rules</text>
+  <line x1="840" y1="450" x2="804" y2="450" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#grey)"/>
+
+  <rect class="box" x="840" y="560" width="210" height="80" rx="10" stroke="#8c959f"/>
+  <text class="t" x="945" y="586" text-anchor="middle">Monitoring and tests</text>
+  <text class="s" x="945" y="605" text-anchor="middle">freshness, leaks, answer quality,</text>
+  <text class="s" x="945" y="622" text-anchor="middle">cost, step-by-step traces</text>
+  <line x1="840" y1="600" x2="804" y2="600" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#grey)"/>
+
+  <!-- Legend -->
+  <g font-size="12" fill="#57606a">
+    <line x1="840" y1="720" x2="872" y2="720" stroke="#2f6fde" stroke-width="2.5"/>
+    <text x="880" y="724">reading (agents ask)</text>
+    <line x1="840" y1="745" x2="872" y2="745" stroke="#1f8a5b" stroke-width="2.5"/>
+    <text x="880" y="749">updating (sources change)</text>
+    <line x1="840" y1="770" x2="872" y2="770" stroke="#d9822b" stroke-width="2.5" stroke-dasharray="6 4"/>
+    <text x="880" y="774">live, never copied</text>
+  </g>
+</svg>

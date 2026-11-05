@@ -41,10 +41,10 @@ The brief allows any reasonable assumption if it is stated. The assumptions belo
 
 | # | Assumption | Why it matters |
 |---|---|---|
-| A1 | **Scale:** ~15,000 employees, ~40 departments, ~50 source systems, ~50M records and ~5M documents (~2 TB of text), ~1–2M changes per day. | Sizes the store, the queue and the embedding cost. Section 7 shows where the design changes if this is 10× larger. |
+| A1 | **Scale:** \~15,000 employees, \~40 departments, \~50 source systems, \~50M records and \~5M documents (\~2 TB of text), \~1–2M changes per day. | Sizes the store, the queue and the embedding cost. Section 7 shows where the design changes if this is 10× larger. |
 | A2 | **Identity:** one company login (Okta or Microsoft Entra ID) with groups, synced to apps by SCIM. Every employee and every agent has an identity. | Permissions can be expressed as company groups. Without this, section 5 needs a per-source identity mapping. |
 | A3 | **Typical sources:** Salesforce (Sales), Jira and GitHub (Engineering), Notion or Confluence (Product), Google Drive or SharePoint (documents and PDFs), Workday (People), NetSuite and a data warehouse (Finance). | Shapes the connector list in section 3. |
-| A4 | **Load:** tens of agents, ~50–200 knowledge queries per second at peak, p95 retrieval latency under ~1 second. | Rules out live-only designs for most data. |
+| A4 | **Load:** tens of agents, \~50–200 knowledge queries per second at peak, p95 retrieval latency under \~1 second. | Rules out live-only designs for most data. |
 | A5 | **Freshness:** minutes for most sources, under 1 minute for permission removals, under 24 hours for anything that relies on the nightly comparison. | Defines the sync triggers and the monitoring targets. |
 | A6 | **Agents are read-only** at first. Any action that changes a source system goes through that system's own API with explicit human confirmation, outside this layer. | Keeps the blast radius of a wrong or manipulated agent small. |
 | A7 | Most sources expose **permissions we can read** (sharing settings, roles, groups). Some do not, such as PDFs on shared drives with loose folder rights. | Section 3.5 covers sources without reliable permissions. |
@@ -62,77 +62,7 @@ The brief allows any reasonable assumption if it is stated. The assumptions belo
 
 ### 2.1 Components and data flow
 
-```mermaid
-flowchart LR
-  subgraph SRC["Department sources (owned by departments)"]
-    S1["Salesforce<br/>(Sales)"]
-    S2["Jira · GitHub<br/>(Engineering)"]
-    S3["Notion · Confluence<br/>(Product)"]
-    S4["Drive · SharePoint<br/>(docs, PDFs)"]
-    S5["Workday<br/>(People)"]
-    S6["NetSuite · Warehouse<br/>(Finance)"]
-  end
-
-  subgraph CONN["Connectors"]
-    C1["Sync connectors<br/>webhook · poll · reconcile · backfill"]
-    C2["Live connectors<br/>fetch at question time, as the user"]
-  end
-
-  subgraph WRITE["Write path: sync and processing (background workers)"]
-    Q["Change queue<br/>per source, ordered by record"]
-    P1["1. Validate against<br/>data contract"]
-    P2["2. Normalize to<br/>record envelope"]
-    P3["3. Map permissions<br/>to company groups"]
-    P4["4. Parse and OCR<br/>(docs, PDFs)"]
-    P5["5. Chunk"]
-    P6["6. Link entities<br/>ID → alias → suggested"]
-    P7["7. Embed<br/>(versioned model)"]
-    DLQ["Quarantine and<br/>dead-letter queue"]
-  end
-
-  subgraph STORE["Knowledge store (one per data region)"]
-    K1[("PostgreSQL + pgvector<br/>records · chunks · entities ·<br/>links · permissions · sync state")]
-    K2[("Object storage<br/>raw copies, parsed text")]
-    K3[("Audit log")]
-  end
-
-  subgraph READ["Read path: Knowledge Gateway (MCP + REST)"]
-    G1["Identity<br/>agent credential + user token"]
-    G2["Policy engine<br/>agent scope AND user access"]
-    G3["Retrieval<br/>keyword + meaning + exact queries,<br/>permission filter inside the query"]
-    G4["Response<br/>sources, timestamps, data marking"]
-  end
-
-  subgraph AGENTS["Agents (built by any team)"]
-    R["Router<br/>(structured output)"]
-    A1["HR agent"]
-    A2["Roadmap agent"]
-    A3["Future agents"]
-  end
-
-  UI["Company chat UI · Slack · workflows"]
-  IDP["Company login (Okta / Entra)<br/>users, groups, SCIM"]
-  CP["Control plane<br/>source registry, data contracts,<br/>agent registry, policies"]
-  MON["Monitoring and evaluation<br/>freshness, drift, leaks, quality"]
-
-  S1 & S2 & S3 & S4 & S5 & S6 --> C1
-  S5 & S6 -.-> C2
-  C1 --> Q --> P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> K1
-  P1 -- "invalid" --> DLQ
-  P4 --> K2
-  IDP -- "group membership" --> P3
-  IDP -- "group membership" --> G2
-
-  UI --> R --> A1 & A2 & A3
-  A1 & A2 & A3 -- "MCP over HTTPS<br/>agent credential + user token" --> G1 --> G2 --> G3 --> G4
-  G3 --> K1
-  G3 -.-> C2
-  G4 --> K3
-  G4 --> A1 & A2 & A3
-
-  CP -.-> C1 & G2
-  MON -.-> K1 & K3 & Q
-```
+![Architecture: agents reach knowledge only through the gateway; sync keeps the store up to date; salary and leave are fetched live](images/architecture.svg)
 
 ### 2.2 How data flows, step by step
 
@@ -247,49 +177,7 @@ The common mistake is to treat everything as documents for vector search. "What 
 
 ### 4.2 The model: records, chunks, entities, links
 
-```mermaid
-erDiagram
-  RECORD ||--o{ CHUNK : "split into"
-  RECORD ||--o{ LINK : "has"
-  ENTITY ||--o{ LINK : "has"
-  ENTITY ||--o{ ENTITY_ALIAS : "known as"
-  RECORD {
-    bigint id
-    text source "salesforce, jira, ..."
-    text external_id "ID inside the source"
-    text title
-    text content
-    jsonb fields "typed fields per data contract"
-    text_array allowed_groups "NULL = unknown = denied"
-    text sensitivity "internal, confidential, restricted"
-    text region "eu, na"
-    text content_hash "text changed: re-chunk, re-embed"
-    text record_hash "anything changed"
-    timestamptz source_updated_at
-    timestamptz synced_at
-  }
-  CHUNK {
-    bigint id
-    bigint record_id
-    text content
-    tsvector tsv "keyword index"
-    vector embedding "meaning index"
-    text embedding_model "vectors only compared within one model"
-  }
-  ENTITY {
-    bigint id
-    text type "feature, customer, team, product, person"
-    text key "stable ID, e.g. dark-mode"
-    text name
-  }
-  LINK {
-    bigint record_id
-    bigint entity_id
-    text relation "requests, implements, describes, owns"
-    text matched_by "id, alias, suggested, reviewed"
-    real confidence
-  }
-```
+![Data model: a record is split into chunks and linked to shared entities; permissions live only on the record](images/data-model.svg)
 
 Design choices and reasons:
 
@@ -398,31 +286,7 @@ Employees use one company chat (web, Slack). A **router** sends each question to
 | **Embedding model change** | Chunks from another model are re-embedded in the background; search compares only same-model vectors | Hours, no downtime |
 | **Schema change in a source** | Contract validation fails → quarantine → alert the owner | Until the owner fixes the contract |
 
-```mermaid
-sequenceDiagram
-  participant S as Source (e.g. Jira)
-  participant C as Connector
-  participant Q as Change queue
-  participant W as Worker
-  participant K as Knowledge store
-  participant R as Nightly reconciliation
-
-  S->>C: webhook "ENG-42 changed"
-  C->>S: fetch current ENG-42 (text + permissions)
-  C->>Q: upsert event (ordered per record)
-  Q->>W: deliver
-  W->>K: compare fingerprints
-  alt only permissions changed
-    W->>K: update record + links (one transaction)
-  else text changed
-    W->>K: update record, replace chunks, rebuild links (one transaction)
-    W->>K: embed new chunks (separate step)
-  end
-  Note over S,C: A deletion with no webhook...
-  R->>S: list all IDs + fingerprints
-  R->>K: compare with stored IDs
-  R->>K: delete records missing from the source
-```
+![Update flow: a change is fetched, queued and saved in one transaction; a nightly check removes records deleted at the source](images/update-flow.svg)
 
 ### 6.2 Correctness rules
 
@@ -440,9 +304,9 @@ sequenceDiagram
 | Component | Proposal | Why | Rejected and why |
 |---|---|---|---|
 | **Gateway and workers** | TypeScript with NestJS, two programs from one codebase | One language for the platform team; strong typing for contracts; NestJS gives modules and dependency injection without much magic. Python workers only for document parsing (section below). | **Python everywhere:** better ML libraries, but the gateway is mostly I/O and contracts. **Microservices from day one:** more moving parts before the boundaries are proven. |
-| **Knowledge store** | **PostgreSQL + pgvector** (managed, e.g. RDS or Cloud SQL), one cluster per region; partitioned by source; HNSW indexes with a fixed dimension per embedding model | Text, vectors, typed fields, links and permissions in **one transactional store**, so an edit or deletion changes everything at once, and the permission filter runs in the same query as the ranking. Mature backups, replicas and access controls. ~50M records and tens of millions of chunks fit with partitioning (A1). | **Dedicated vector databases** (Pinecone, Weaviate, Qdrant): a second copy to keep in sync, with weaker transactions and harder deletions and permission filters. **Elasticsearch / OpenSearch:** strong keyword search, but a second system and weaker transactions. It is the **escape hatch** if search load or size grows ~10× beyond A1. **Neo4j:** see 4.3. **SQLite:** fine for a laptop, not for production. |
+| **Knowledge store** | **PostgreSQL + pgvector** (managed, e.g. RDS or Cloud SQL), one cluster per region; partitioned by source; HNSW indexes with a fixed dimension per embedding model | Text, vectors, typed fields, links and permissions in **one transactional store**, so an edit or deletion changes everything at once, and the permission filter runs in the same query as the ranking. Mature backups, replicas and access controls. \~50M records and tens of millions of chunks fit with partitioning (A1). | **Dedicated vector databases** (Pinecone, Weaviate, Qdrant): a second copy to keep in sync, with weaker transactions and harder deletions and permission filters. **Elasticsearch / OpenSearch:** strong keyword search, but a second system and weaker transactions. It is the **escape hatch** if search load or size grows \~10× beyond A1. **Neo4j:** see 4.3. **SQLite:** fine for a laptop, not for production. |
 | **Raw and parsed files** | Object storage (S3 / GCS) per region | Cheap, versioned; allows re-processing without re-fetching from sources | Storing large files in the database |
-| **Change queue** | Managed queue per region with per-record ordering (SQS FIFO or Pub/Sub ordering keys); Redis + BullMQ for small internal jobs | Ordering per record, retries, dead-letter queues, no cluster to run | **Kafka:** excellent at very high volume and for replay, but heavy to run. Worth it if changes reach ~10× A1, or if a company-wide event bus already exists. |
+| **Change queue** | Managed queue per region with per-record ordering (SQS FIFO or Pub/Sub ordering keys); Redis + BullMQ for small internal jobs | Ordering per record, retries, dead-letter queues, no cluster to run | **Kafka:** excellent at very high volume and for replay, but heavy to run. Worth it if changes reach \~10× A1, or if a company-wide event bus already exists. |
 | **Long jobs** (backfill, re-embedding, reconciliation) | A workflow engine (Temporal) or scheduled worker jobs | Resumable, throttled, visible progress | Cron scripts with no state |
 | **Document parsing** | Docling or Unstructured (Python), plus cloud OCR (Textract or Document AI) for scans | Layout and tables matter for policies and PDFs | Plain text extraction: loses tables and structure |
 | **Embeddings** | A multilingual embedding model through a provider with **regional endpoints**; an open-weights model (e.g. BGE-M3 or multilingual E5) self-hosted for restricted regions | Content is multilingual (Italy, Canada, more); residency rules | A single US-only API for all regions |
@@ -541,7 +405,7 @@ Each alert has an owner (platform team or source owner) and a written runbook.
 2. **First cross-department use case:** the roadmap agent with Sales, Engineering and Product, with department-owned eval sets and leak tests as release gates.
 3. **HR use case:** policies ingested, personal HR data live-only. This proves the live-access path and the restricted class.
 4. **Scale out:** more connectors (build or buy), the second region, the router and company chat, and self-service source onboarding through data contracts.
-5. **Later:** agents that take actions (with human confirmation), suggested-link review tools, and the OpenSearch or Kafka escape hatches if the numbers in A1 grow ~10×.
+5. **Later:** agents that take actions (with human confirmation), suggested-link review tools, and the OpenSearch or Kafka escape hatches if the numbers in A1 grow \~10×.
 
 ---
 
