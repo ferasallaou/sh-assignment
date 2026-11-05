@@ -22,6 +22,8 @@ describe('policies.yaml', () => {
     const groupsOf = (id: string) => config.users.find((user) => user.id === id)?.groups;
     expect(groupsOf('paula')).toEqual(['product']);
     expect(groupsOf('sam')).toEqual(['sales']);
+    expect(groupsOf('eli')).toEqual(['engineering']);
+    expect(groupsOf('nina')).toEqual([]);
   });
 
   it('rejects duplicate credentials', () => {

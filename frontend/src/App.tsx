@@ -71,7 +71,7 @@ export function App() {
               </button>
             ))}
             <button type="button" className={compare ? 'active' : ''} onClick={() => setCompare(true)}>
-              Compare both
+              Compare all
             </button>
           </div>
           <p className="hint">Demo shortcut: in production, who you are comes from the company login.</p>

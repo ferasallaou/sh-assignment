@@ -34,3 +34,17 @@ users:
     name: Sam (Account Executive)
     token: dev-user-sam
     groups: [sales]
+
+  # Sees engineering tickets and the shared product brief, but no customer deals
+  # and not the Product-only roadmap draft.
+  - id: eli
+    name: Eli (Engineer)
+    token: dev-user-eli
+    groups: [engineering]
+
+  # Signed in but not in any group yet, so every lookup comes back empty.
+  # Proves that a valid login alone gives no access.
+  - id: nina
+    name: Nina (New hire, no groups yet)
+    token: dev-user-nina
+    groups: []

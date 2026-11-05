@@ -83,7 +83,7 @@ afterAll(async () => {
 describe('listing users and agents', () => {
   it('lists users without their tokens', async () => {
     const body = await (await fetch(`${apiUrl}/api/users`)).text();
-    expect(JSON.parse(body).map((u: { id: string }) => u.id)).toEqual(['paula', 'sam']);
+    expect(JSON.parse(body).map((u: { id: string }) => u.id)).toEqual(['paula', 'sam', 'eli', 'nina']);
     expect(body).not.toMatch(/dev-user-|token/);
   });
 

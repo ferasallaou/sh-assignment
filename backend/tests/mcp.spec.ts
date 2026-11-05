@@ -27,6 +27,8 @@ const ROADMAP = 'dev-agent-roadmap';
 const FAQ = 'dev-agent-product-faq';
 const PAULA = 'dev-user-paula';
 const SAM = 'dev-user-sam';
+const ELI = 'dev-user-eli';
+const NINA = 'dev-user-nina';
 
 async function connect(agentKey: string, userToken: string): Promise<Client> {
   const transport = new StreamableHTTPClientTransport(new URL(url), {
@@ -156,6 +158,30 @@ describe('results through the service', () => {
     const sam = await call(await connect(ROADMAP, SAM), 'get_feature_context', { feature: 'dark-mode' });
     expect(recordIds(paula.json.records)).toEqual(['ENG-42', 'ENG-43', 'PRD-11', 'PRD-7', 'PRD-9', 'S-101', 'S-102']);
     expect(recordIds(sam.json.records)).toEqual(['PRD-11', 'PRD-7', 'S-101', 'S-102', 'S-103']);
+  });
+
+  it('gives Eli (Engineering) the tickets and shared brief, but no deals or Product-only drafts', async () => {
+    const eli = await connect(ROADMAP, ELI);
+    const feature = await call(eli, 'get_feature_context', { feature: 'dark-mode' });
+    expect(recordIds(feature.json.records)).toEqual(['ENG-42', 'ENG-43', 'PRD-7']);
+    const search = await call(eli, 'search_knowledge', { query: 'dark mode customers deal renewal roadmap' });
+    const found = recordIds(search.json.results);
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.every((id: string) => id.startsWith('ENG-') || id === 'PRD-7')).toBe(true);
+    expect(found).not.toContain('ENG-60'); // missing permissions: denied even to Engineering
+  });
+
+  it('gives Nina (signed in, no groups) nothing, in the same shape as "no matches"', async () => {
+    const nina = await connect(ROADMAP, NINA);
+    const tools = await nina.listTools();
+    expect(tools.tools.map((t) => t.name).sort()).toEqual(['get_feature_context', 'search_knowledge']);
+    const feature = await call(nina, 'get_feature_context', { feature: 'dark-mode' });
+    const search = await call(nina, 'search_knowledge', { query: 'dark mode' });
+    const nothing = await call(await connect(ROADMAP, PAULA), 'search_knowledge', { query: 'zebra pineapple' });
+    expect(feature.json.records).toEqual([]);
+    expect(search.json.results).toEqual([]);
+    expect(Object.keys(search.json).sort()).toEqual(Object.keys(nothing.json).sort());
+    expect(nothing.json.results).toEqual([]);
   });
 
   it('returns source and update time with every result', async () => {
