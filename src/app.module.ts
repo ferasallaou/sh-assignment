@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConnectorsModule } from './connectors/connectors.module';
 import { DatabaseModule } from './database/database.module';
 
 /**
@@ -6,6 +7,6 @@ import { DatabaseModule } from './database/database.module';
  * providers, agent) are added here as each build step lands.
  */
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, ConnectorsModule],
 })
 export class AppModule {}
