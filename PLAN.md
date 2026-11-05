@@ -47,7 +47,7 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 7. ✅ **AI model adapters (done, 89 tests passing, `npm run models:check` works):** OpenRouter chat with tool binding via LangChain behind `LlmProvider`, and OpenRouter embeddings behind `EmbeddingProvider`.
 8. ✅ **Roadmap agent CLI (done, 98 tests passing, `npm run agent` works with the real model):** our own tool loop with step and call limits, answers with source references.
 9. ✅ **Proof (done, 103 tests passing; `npm run eval` and `npm run demo` pass with the real model):** a small evaluation set, one demo script covering all 6 required scenarios (including a prompt that tries to bypass access), the README, and `docs/ai-sdlc.md`, updated as we go.
-10. **Design document:** written after the demo works, covering every section the PDF asks for.
+10. ✅ **Design document (done, `docs/design.md`):** written after the demo works, covering every section the PDF asks for.
 11. **Optional, if time allows (added 2026-11-05):** a small web page where you pick a user and ask a question, and the agent's steps (tool calls, results, then the answer) stream in live over SSE (server-sent events). It reuses the step 8 agent loop; the CLI stays the main demo. Plain and functional, not polished.
 
 ## Rules while building
