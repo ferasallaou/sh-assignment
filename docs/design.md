@@ -11,7 +11,7 @@ A working proof of concept of this design is in this repository (see the [README
 Agents need knowledge that is **accurate, current and authorized at the moment they act**. The system has two independent flows that meet only in a shared store:
 
 - **Write path (self-maintaining):** department sources → connectors → a change queue → processing workers → the knowledge store. Additions, edits, deletions and **permission changes** flow through it continuously. A nightly full comparison catches anything that was missed.
-- **Read path (safe access):** agents → one **Knowledge Gateway** (MCP + REST) → permission-filtered retrieval. Identity comes from verified credentials, never from the model. Access is allowed only when **both** the agent's scope **and** the user's own permissions allow it, and that check happens **inside the database query**.
+- **Read path (safe access):** agents → one **Knowledge Gateway** (MCP + REST) → permission-filtered retrieval. Identity comes from verified credentials, never from the model. Access is allowed only when **both** the agent's scope **and** the user's own permissions allow it, and for stored knowledge that check happens **inside the database query**. Live data (such as pay) is checked by the gateway before the call and by the source itself.
 
 Key decisions:
 
@@ -159,7 +159,7 @@ Some files have no trustworthy access rules: an old shared folder, an exported P
 1. **Inherit from the storage location** (folder or site permissions), if the location is governed.
 2. Otherwise require an **owner-provided manifest**: a small file or form that states who may see the document set.
 3. If neither exists, the item is stored **with unknown permissions and denied to everyone** (deny by default), and listed on the owner's "needs permissions" report. The PoC does this with ticket `ENG-60`.
-4. **Mixed-sensitivity documents should be split** at the source (for example, a general HR handbook and a separate restricted pay-bands annex). Splitting by section at processing time is possible, but fragile, so it is a fallback only.
+4. **Mixed-sensitivity documents should be split** at the source (for example, a general HR handbook and a separate confidential pay-bands annex shared only with HR, while each person's actual pay stays live-only). Splitting by section at processing time is possible, but fragile, so it is a fallback only.
 
 ---
 
@@ -213,7 +213,7 @@ Tools are few and stable:
 - `search_knowledge(query, filters)`: hybrid search over permitted documents and records.
 - `get_entity_context(type, key)`: everything permitted that is linked to an entity, with typed fields (`get_feature_context` in the PoC).
 - `query_records(source, filters, aggregate)`: exact, typed queries over permitted records (counts, sums).
-- Live tools per source, such as `get_leave_balance()`, which run as the user (section 5.5).
+- Live tools per source, such as `get_leave_balance()` and `get_salary(employee?)`, which run as the user (section 5.5). The gateway decides who may ask about whom (own pay, or anyone's for HR) before calling the source.
 
 ### 5.2 Identity: who is asking
 
@@ -420,9 +420,9 @@ The PoC (this repository) builds one vertical slice: the roadmap question "Shoul
 | Knowledge store | PostgreSQL + pgvector: records, chunks, entities, links, permissions, sync state, audit | One region; exact vector search (no index), fine at this size |
 | Permission mapping to company groups | Groups stored per record; NULL = denied | Groups come straight from mock files |
 | Entity linking | Explicit IDs, then aliases | No suggested links or review queue |
-| Gateway: identity, policy, retrieval, audit | MCP over HTTP; agent key + user token; both must allow, in SQL; tool visibility and re-check; audit log | Mock keys in `policies.yaml` instead of SSO and token exchange; simple in-code policy instead of Cedar/OPA |
+| Gateway: identity, policy, retrieval, audit | MCP over HTTP; agent key + user token; both must allow, in SQL for stored knowledge and in code for salaries; tool visibility and re-check; audit log | MCP only, no REST API; mock keys in `policies.yaml` instead of SSO and token exchange; simple in-code policy instead of Cedar/OPA |
 | Hybrid search | Keyword + meaning, merged by rank; keyword fallback | — |
-| Agents | Roadmap and HR agents sharing one tool loop with limits and citation checks; a router that picks the agent (checked JSON, only agents offered to the user) | Router is one model call with no confidence score or fallback to a second agent |
+| Agents | Roadmap, HR and Product FAQ agents sharing one tool loop with limits and citation checks; a router that picks the agent (checked JSON, only agents offered to the user) | Router is one model call with no confidence score or fallback to a second agent |
 | Live access | Leave balances and salaries fetched at question time from a separate mock HR web service, never stored; salary access (own, or HR for anyone) decided and audited by the MCP service | A local service over a JSON file stands in for the HR API; one shared service key instead of token exchange |
 | Models | OpenRouter through LangChain, behind our interfaces | Not production-grade for residency (section 7) |
 | Quality | Retrieval and answer test sets, leak checks, 6-scenario demo, 100+ automated tests, CI | No production monitoring or alerting |
