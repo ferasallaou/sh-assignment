@@ -1,8 +1,8 @@
-dist/
-coverage/
-node_modules/
+**/dist/
+**/coverage/
+**/node_modules/
 package-lock.json
 # Docs are hand-formatted; Prettier checks code and config only.
 *.md
 # Mock source data is kept exactly as a department would export it.
-data/sources/
+backend/data/sources/

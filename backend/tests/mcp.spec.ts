@@ -228,7 +228,8 @@ describe('started with npm run mcp', () => {
   // inject class dependencies, so every dependency needs an explicit @Inject.
   it('boots and answers a tool call', async () => {
     const root = join(__dirname, '..');
-    const child = spawn(join(root, 'node_modules', '.bin', 'tsx'), ['scripts/mcp.ts'], {
+    // tsx is installed at the workspace root, so resolve it instead of assuming a path.
+    const child = spawn(process.execPath, [require.resolve('tsx/cli'), 'scripts/mcp.ts'], {
       cwd: root,
       // No model key: this test must not call OpenRouter (and CI has no key anyway).
       env: { ...process.env, MCP_PORT: '0', OPENROUTER_API_KEY: '' },

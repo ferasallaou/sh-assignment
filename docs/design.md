@@ -170,7 +170,7 @@ flowchart LR
 
 ### 3.1 One connector contract
 
-Every source is connected through the same small interface (as built in the PoC, `src/types/sources.ts`):
+Every source is connected through the same small interface (as built in the PoC, `backend/src/types/sources.ts`):
 
 ```ts
 interface SourceConnector {
@@ -491,7 +491,7 @@ sequenceDiagram
 
 | Quality | Measure | Where |
 |---|---|---|
-| **No leaks** (hard gate) | Permission test sets per agent and per user group: forbidden records must never appear. **Any leak fails the release.** | CI and nightly against production-like data (PoC: `data/eval/retrieval.yaml`, `npm run eval`) |
+| **No leaks** (hard gate) | Permission test sets per agent and per user group: forbidden records must never appear. **Any leak fails the release.** | CI and nightly against production-like data (PoC: `backend/data/eval/retrieval.yaml`, `npm run eval`) |
 | **Retrieval relevance** | Recall@k and MRR on labeled question sets per agent, written with each department | CI and weekly |
 | **Answer faithfulness** | Every claim cites a returned record; cited IDs verified; LLM-as-judge for support, calibrated against human review | CI on a fixed set; sampled in production (PoC: `npm run eval -- --answers`) |
 | **Freshness** | Time from a source change to its availability, per source (p50, p95); age of the last successful sync | Continuous |
