@@ -51,6 +51,18 @@ The one exception to copying: personal HR data (leave balances and salaries). Th
 - Node.js 20 or newer (CI uses 24)
 - Docker (for PostgreSQL with pgvector)
 
+## Quick start
+
+```bash
+npm ci
+cp backend/.env.example backend/.env   # then add your OPENROUTER_API_KEY
+npm run start
+```
+
+`npm run start` does everything in order: starts the database, creates the tables, syncs the sources, then starts the pretend HR service, the MCP service, the web API and the page, and opens http://localhost:5173 in your browser. It is safe to run again: sync skips anything that hasn't changed. Stop it with Ctrl+C.
+
+The steps below do the same thing one at a time.
+
 ## Setup
 
 ```bash
@@ -67,7 +79,7 @@ With `OPENROUTER_API_KEY` set in `backend/.env`, check the key and models first 
 npm run models:check
 ```
 
-The first sync adds 14 records (12 plus 2 HR documents) and prints one warning: ticket `ENG-60` has no permissions in its source, so it is stored but denied to everyone. With a key set, it also embeds the 14 chunks for meaning search. Running sync again changes nothing.
+The first sync adds 14 records (12 plus 2 HR documents) and prints one warning: ticket `ENG-60` has no permissions in its source, so it is stored but denied to everyone. With a key set, it also embeds the 14 chunks for meaning search. Running sync again changes nothing: unchanged sources are skipped, and a changed record is updated in place, so there are never duplicates.
 
 `npm run db:down` stops the database. The data is kept in a Docker volume.
 

@@ -23,12 +23,23 @@ export function App() {
   const [runs, setRuns] = useState<AskParams[]>([]);
 
   useEffect(() => {
-    fetch('/api/users')
-      .then(async (u) => {
-        if (!u.ok) throw new Error();
-        setUsers(await u.json());
-      })
-      .catch(() => setLoadError('Could not reach the web API. Start everything with "npm run dev".'));
+    // The page can open before the web API has started (npm run start), so try for a few seconds.
+    let cancelled = false;
+    async function loadUsers(attempt: number): Promise<void> {
+      try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error();
+        if (!cancelled) setUsers(await response.json());
+      } catch {
+        if (cancelled) return;
+        if (attempt < 20) setTimeout(() => void loadUsers(attempt + 1), 500);
+        else setLoadError('Could not reach the web API. Start everything with "npm run start".');
+      }
+    }
+    void loadUsers(1);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function ask(event: FormEvent) {
