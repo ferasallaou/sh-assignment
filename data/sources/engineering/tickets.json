@@ -1,0 +1,41 @@
+[
+  {
+    "id": "ENG-42",
+    "title": "Implement dark mode across the web dashboard",
+    "description": "Needs a design-token refactor first. Estimate: about 6 weeks for 2 engineers. Risk: the charts library has no dark palette yet (see ENG-43).",
+    "feature": "dark-mode",
+    "status": "planned",
+    "estimate_weeks": 6,
+    "allowed_groups": ["engineering", "product"],
+    "updated_at": "2026-10-27T10:00:00Z"
+  },
+  {
+    "id": "ENG-43",
+    "title": "Spike: dark theme support in the charts library",
+    "description": "Check whether the charts library can render a dark theme or needs replacing. Two days timeboxed.",
+    "feature": null,
+    "status": "in_progress",
+    "estimate_weeks": 0.4,
+    "allowed_groups": ["engineering", "product"],
+    "updated_at": "2026-10-30T15:20:00Z"
+  },
+  {
+    "id": "ENG-51",
+    "title": "Export campaign results as CSV",
+    "description": "Shipped in release 4.12. Monthly scheduled export is a follow-up.",
+    "feature": "bulk-export",
+    "status": "done",
+    "estimate_weeks": 2,
+    "allowed_groups": ["engineering", "product", "sales"],
+    "updated_at": "2026-10-05T09:00:00Z"
+  },
+  {
+    "id": "ENG-60",
+    "title": "SAML login support",
+    "description": "Add SAML so enterprise customers can log in with their identity provider. Permissions were never set on this ticket, so it must be denied by default.",
+    "feature": "sso",
+    "status": "planned",
+    "estimate_weeks": 4,
+    "updated_at": "2026-10-29T12:00:00Z"
+  }
+]

@@ -1,0 +1,6 @@
+id,account,feature_id,request,deal_value_eur,stage,allowed_groups,updated_at
+S-101,Carrefour Italia,dark-mode,"Store managers use the app during night shifts and asked for dark mode before their renewal.",180000,renewal,sales;product,2026-10-20T09:00:00Z
+S-102,Esselunga,,"Asked in the quarterly review for a night mode on the retailer dashboard.",95000,negotiation,sales;product,2026-10-22T14:30:00Z
+S-103,Lidl Deutschland,dark-mode,"Confidential: renewal worth 240k EUR is at risk unless dark mode ships in Q1. A 15% discount was already offered.",240000,at-risk,sales,2026-10-28T08:15:00Z
+S-104,Conad,bulk-export,"Finance team needs a CSV export of campaign results every month.",60000,won,sales;product,2026-10-12T11:00:00Z
+S-105,Auchan,,"Requires Okta login for all store staff before rollout.",120000,negotiation,sales;product,2026-10-25T16:45:00Z

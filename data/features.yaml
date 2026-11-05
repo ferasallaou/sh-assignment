@@ -1,0 +1,13 @@
+# Feature catalog: the shared business objects (entities) records get linked to.
+# Records are linked by explicit feature ID first, then by these known aliases.
+# In production this catalog would be owned by Product (e.g. synced from the roadmap tool).
+features:
+  - key: dark-mode
+    name: Dark mode
+    aliases: [dark theme, night mode]
+  - key: bulk-export
+    name: Bulk CSV export
+    aliases: [csv export, export to excel]
+  - key: sso
+    name: Single sign-on
+    aliases: [single sign-on, okta login, saml login]

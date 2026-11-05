@@ -1,0 +1,36 @@
+# Mock identities and access rules.
+#
+# In production: users and groups come from the company login (SSO, e.g. Okta),
+# agents are registered service identities, and keys are real secrets.
+# Here they are plain strings so the demo is easy to run.
+#
+# Access rule: a record is visible only if BOTH
+#   1. the agent's scope allows its source, AND
+#   2. the user is in at least one of the record's allowed_groups.
+# Records with no allowed_groups are denied to everyone (deny by default).
+
+agents:
+  - id: roadmap-agent
+    description: Helps decide what to build next using Sales, Engineering and Product data.
+    api_key: dev-agent-roadmap
+    allowed_sources: [sales, engineering, product]
+    allowed_tools: [search_knowledge, get_feature_context]
+
+  # A second, narrower agent, used to test that tool visibility and source scope
+  # depend on the calling agent, not only on the user.
+  - id: product-faq-agent
+    description: Answers questions about product documents only.
+    api_key: dev-agent-product-faq
+    allowed_sources: [product]
+    allowed_tools: [search_knowledge]
+
+users:
+  - id: paula
+    name: Paula (Product Manager)
+    token: dev-user-paula
+    groups: [product]
+
+  - id: sam
+    name: Sam (Account Executive)
+    token: dev-user-sam
+    groups: [sales]
