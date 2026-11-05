@@ -29,6 +29,7 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
   - Embeddings as a separate "fill what's missing" pass, so a model outage never blocks syncing.
   - A separate test database after noticing that sync tests would otherwise wipe the demo data.
   - The first full test run caught a step 1 test that assumed an empty database; it was fixed to check only its own record.
+- **Step 5 (permissions and search):** the assistant wrote the search service with two lookups (by question and by feature). The access rule is one SQL condition shared by both, so it is applied before ranking and nothing restricted leaves the database. Choices it made: match any word of a question (checked on the test data: requiring all words matched 0 pieces for "Should we prioritize dark mode next?", any word matched 8), merge keyword and meaning rankings by rank position rather than by raw scores, and fall back to keyword search if the embedding model fails. Before starting, it noticed there was no branch for the step yet and created `feat/permission-search`.
 
 ## Testing
 
@@ -36,6 +37,7 @@ Tool: Claude Code (Claude Opus 5.5) in the terminal, working in this repository.
 - Step 2: 9 more tests (policies and catalog are valid, duplicate keys and unknown tools are rejected, and the mock data contains every demo case). 13 tests in total, all passing.
 - Step 3: 14 more connector tests (field mapping, quoted CSV text, missing permissions become "unknown", missing feature IDs, bad rows, invalid JSON, duplicate IDs, missing front matter, and the snapshot fingerprint changing only on edits). 27 tests in total, all passing on the first run.
 - Step 4: 21 more tests for chunking, linking, and sync (adds, edits, permission-only changes, deletes of rows and files, skipping unchanged sources, the empty-export guard, a broken source not blocking others, retry after failure, and embeddings filled later). 48 tests in total, all passing. Also ran `npm run sync` twice on the demo database: the first run added 12 records and warned about ENG-60, and the second run changed nothing.
+- Step 5: 15 more tests (different results for Paula and Sam, a user in every group still can't see the ticket with missing permissions, the narrower agent stays in its sources, a restricted record named exactly in the question is not returned, "restricted" and "nothing matches" give the same empty answer, meaning search finds records with no shared words, and keyword fallback when the model fails). All 15 passed on the first run, so the assistant removed the permission condition on purpose to check the tests can fail: 8 of them failed, then passed again once it was restored. 63 tests in total, all passing.
 
 ## Review
 
