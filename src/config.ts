@@ -9,6 +9,9 @@ import { z } from 'zod';
 const configSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://knowledge:knowledge@localhost:5433/knowledge'),
   MCP_PORT: z.coerce.number().int().min(0).max(65535).default(3100),
+  // The agent CLI: which agent key it uses and where the MCP service is (default: localhost on MCP_PORT).
+  AGENT_KEY: z.preprocess(emptyToUndefined, z.string().min(1).default('dev-agent-roadmap')),
+  MCP_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   // AI models through OpenRouter. With no key, there is no chat model and search uses keywords only.
   // An empty value counts as "not set", so a blank line in .env doesn't break startup.
   OPENROUTER_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
