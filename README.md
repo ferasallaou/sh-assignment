@@ -16,8 +16,8 @@ The demo question is: _"Should we prioritize dark mode next?"_
 | 7 | AI models through OpenRouter | ✅ Done |
 | 8 | Roadmap agent you can ask questions | ✅ Done |
 | 9 | Evaluation set, demo script for the 6 scenarios | ✅ Done |
-| 10 | Design document | Next |
-| 11 | Optional: small web page showing the agent's steps live | If time allows |
+| 10 | Design document ([`docs/design.md`](docs/design.md)) | ✅ Done |
+| 11 | Optional: small web page showing the agent's steps live | Next, if time allows |
 
 ## What the PoC proves
 
@@ -233,4 +233,10 @@ docs/ai-sdlc.md  how AI was used to build this
 
 ## How this maps to production
 
-The full design document comes in step 10. In short: the same pieces, with real connectors owned by each department, a job queue and background workers for sync, the company login for identity, a highly available MCP service, and live access (instead of copying) for highly sensitive data.
+The full production design is in [`docs/design.md`](docs/design.md): architecture and data flow, connectors, the knowledge model, agent access, self-maintenance, technology choices with rejected alternatives, trade-offs, quality monitoring, risks and open questions. Its section 13 maps each production component to what this PoC builds and what it simplifies.
+
+In short: the same pieces, with real connectors owned by each department (webhooks, polling and nightly reconciliation), a queue and background workers for sync, the company login and token exchange for identity, a policy engine compiled into the same SQL filter, one deployment per data region, a highly available gateway, and live access (instead of copying) for highly sensitive data.
+
+## How AI was used
+
+See [`docs/ai-sdlc.md`](docs/ai-sdlc.md) for a factual log of how AI was used across design, implementation, testing and review.
