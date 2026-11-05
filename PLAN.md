@@ -1,6 +1,6 @@
 # Shopfully take-home: implementation plan (approved 2026-11-04)
 
-Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS.md`.
+Source of truth for the build: `AGENTS.md`. Background and reasoning: `DECISIONS.md`.
 
 ## Scope right now
 
@@ -66,4 +66,4 @@ Source of truth for the build: `CLAUDE.md`. Background and reasoning: `DECISIONS
 
 - Build one slice at a time and run tests after each meaningful change.
 - Never claim something works without running it.
-- Update this file, `DECISIONS.md` and `CLAUDE.md` whenever a decision changes, so the plan doesn't drift.
+- Update this file, `DECISIONS.md` and `AGENTS.md` whenever a decision changes, so the plan doesn't drift.

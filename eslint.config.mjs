@@ -26,7 +26,7 @@ export default tseslint.config(
     },
   },
   {
-    // backend/src/types holds shared types only (see CLAUDE.md). Anything that exists at runtime
+    // backend/src/types holds shared types only (see AGENTS.md). Anything that exists at runtime
     // (functions, classes, constants, enums, value exports) belongs next to the code that uses it.
     files: ['backend/src/types/**/*.ts'],
     rules: {

@@ -1,6 +1,6 @@
 # Shopfully take-home: decisions and findings so far
 
-Saved on 2026-11-04. **This file wins over `PLAN.md` where they disagree.** `PLAN.md` is the older draft. **`CLAUDE.md` is now the source of truth for the demo build** (PostgreSQL + pgvector, OpenRouter for chat and embeddings, MCP over HTTP, roadmap agent CLI, no router or UI in the demo).
+Saved on 2026-11-04. **This file wins over `PLAN.md` where they disagree.** `PLAN.md` is the older draft. **`AGENTS.md` is now the source of truth for the demo build** (PostgreSQL + pgvector, OpenRouter for chat and embeddings, MCP over HTTP, roadmap agent CLI, no router or UI in the demo at first; a web page and a router were added later, see below).
 
 ## The assignment (source: `~/Downloads/AI_Engineer_x_Shopfully_Take_home_assignment.pdf`)
 
@@ -27,7 +27,7 @@ Saved on 2026-11-04. **This file wins over `PLAN.md` where they disagree.** `PLA
 9. **Production should not need a UI for the layer itself** (its users are agents). Nice to have: an admin page showing sync status per source.
 10. **Buy vs build** goes in the document: Glean (paid, keeps source permissions), Onyx (open source, permission syncing only in the paid edition), Microsoft Copilot, n8n (a workflow tool; its forums show deletions and permissions are weak spots), and Airbyte or Nango for ready-made connectors.
 
-## Tech decisions (confirmed 2026-11-04, details in `CLAUDE.md` and `PLAN.md`)
+## Tech decisions (confirmed 2026-11-04, details in `AGENTS.md` and `PLAN.md`)
 
 - TypeScript and **NestJS**. In production it is one codebase run as **two programs** (front door and background worker) that can be split into separate services later.
 - **PostgreSQL + pgvector** (via Docker) for the demo **and** production. Text, vectors, tables, links, permissions and sync status live in one place, so an edit or deletion changes them all in one transaction. This replaced the SQLite assumption at the user's request. Rejected: Pinecone-style vector databases (a second system to keep in sync, harder deletions), Neo4j (link tables are enough at first) and SQLite (doesn't match production). In production, a Redis job queue sits in front of the worker; the demo runs sync on demand.
@@ -47,7 +47,7 @@ Diagram: company-wide UI → router → agents (HR, roadmap, future) → MCP ser
 - **Core rules:** ingest by default, but fetch very sensitive or fast-changing data live; enforce permissions outside the AI; deny by default; keep providers swappable.
 - **Router:** a future extension, not part of the demo. It uses structured output.
 - **Demo:** a small **roadmap** use case (changed from HR), with NestJS, mocked Markdown/CSV/JSON sources, permission-aware MCP tools, OpenRouter for models, and tests for answers, permissions and deletions.
-- **Still open at the time:** the knowledge model, production technology choices, scale assumptions and the demo's storage choice. *Since closed: the knowledge model is records, chunks, entities and links (`CLAUDE.md`), and storage is PostgreSQL + pgvector.*
+- **Still open at the time:** the knowledge model, production technology choices, scale assumptions and the demo's storage choice. *Since closed: the knowledge model is records, chunks, entities and links (`AGENTS.md`), and storage is PostgreSQL + pgvector.*
 
 ## Review of the user's outline
 
